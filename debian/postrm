@@ -1,0 +1,3 @@
+echo "Removing user"
+deluser guildservice
+echo "done"

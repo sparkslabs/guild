@@ -1,0 +1,6 @@
+#!/usr/bin/python
+
+from guild.service import main
+
+main()
+
