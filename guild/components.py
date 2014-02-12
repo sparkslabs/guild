@@ -71,12 +71,17 @@ class SubscribeTo(Actor):
 class Printer(Actor):
   @actor_method
   def input(self, line):
+      #sys.stdout.write("DEBUG "+ repr(self)+ ":")
       if isinstance(line,str):
           sys.stdout.write(line)
       else:
           sys.stdout.write(" ".join([ str(x) for x in line]) )
       sys.stdout.write("\n")
       sys.stdout.flush()
+
+  @late_bind_safe
+  def output(self,line):
+      print "unbound, odd,", line
 
 if __name__ == "__main__":
     class producer(Actor):
