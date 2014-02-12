@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-from actor import Actor, actor_method, process_method, late_bind, UnboundActorMethod
+import guild
+
+guild.init()
+
+from guild.actor import Actor, actor_method, process_method, late_bind, late_bind_safe, UnboundActorMethod, start
 import time
 import sys
 
@@ -28,6 +32,41 @@ class Splitter(Actor):
 
     input = publish
 
+def Backplane(name):
+    plane = Splitter()
+    guild.register(name, plane)
+    return plane
+
+
+def PublishTo(name):
+    splitter = guild.lookup(name)
+    return splitter
+
+class SubscribeTo(Actor):
+    def __init__(self, name):
+        super(SubscribeTo, self).__init__()
+        self.name = name
+
+    def process_start(self):
+        tries = 0
+        while True:
+            splitter = guild.lookup(self.name)
+            if splitter is None:
+                tries += 1
+                time.sleep(0.01)
+                if tries > 100:
+                    raise Exception("BUST")
+            else:
+                break
+        splitter.subscribe(self.input)
+
+    @actor_method
+    def input(self, value):
+        self.output(value)
+
+    @late_bind_safe
+    def output(self, value):
+        pass
 
 class Printer(Actor):
   @actor_method
