@@ -7,3 +7,6 @@ actor system - the idea of late binding, and of having common names (or aliases)
 for the purposes of enabling pipelining.
 
 It's inspired by Kamaelia, but with all the ugly parts removed.
+
+
+Michael.
