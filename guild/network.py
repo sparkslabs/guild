@@ -61,21 +61,6 @@ class MulticastTransceiver(Actor):
       pass
 
 if __name__ == "__main__":
+    # No demo code at present
+    pass
 
-    # This needs rewriting to be something else...
-
-    from grains import EventGrain
-    class GrainDisplay(Actor):
-        @actor_method
-        def show(self, message, timestamp):
-            x = EventGrain.grainFromUDP(message)
-            print "Hello"
-            pprint.pprint(x.json(),width=150)
-            print "--------------------------------------------------------------------------------------------------"
-
-    erx = EventRx()
-    d = GrainDisplay()
-    erx.bind("display", d, "show")
-    d.start()
-    erx.start()
-    erx.join()
