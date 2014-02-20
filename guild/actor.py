@@ -7,6 +7,7 @@
 
 from threading import Thread as _Thread
 import Queue as _Queue
+import sys
 
 __all__ = ["Actor", "actor_method", "process_method", "late_bind", "UnboundActorMethod", "late_bind_safe", "pipe", "wait_for", "stop", "pipeline", "wait_KeyboardInterrupt", "start" ]
 
@@ -116,7 +117,17 @@ class Actor(_Thread):
         # print command
         callback, zelf, argv, argd = command
         if zelf:
-            callback(zelf, *argv, **argd)
+            try:
+                callback(zelf, *argv, **argd)
+            except TypeError:
+              import sys
+              sys.stderr.write("FAILURE -- ")
+              sys.stderr.write("command (callback, zelf, argv, argd): ")
+              sys.stderr.write(", ".join([repr(x) for x in command]))
+              sys.stderr.write("\n")
+              sys.stderr.flush()
+              print "self", self
+              raise
         else:
             callback(*argv, **argd)
 
