@@ -9,24 +9,43 @@ import time
 import sys
 
 class Splitter(Actor):
+    """A Splitter takes data published to it and passes it to subscribers
+
+    Additionally, a splitter can be used in a bridging mode, such that two splitters can be joined
+    to each other allowing anyone to publish two either splitter and be recieved by all subscribers of
+    either splitter, with no data looping"""
+
     def __init__(self):
         super(Splitter,self).__init__()
         self.subscribers = []
+        self.bridge_subscribers = []
 
     @actor_method
     def subscribe(self, callback):
-        #print "SUBSCRIBE", callback
-        #print "         LIST", self.subscribers
         self.subscribers.append(callback)
 
     @actor_method
+    def subscribe_bridge(self, callback):
+        self.bridge_subscribers.append(callback)
+
+    @actor_method
     def unsubscribe(self, callback):
-        #print "UNSUBSCRIBE", callback
-        #print "           LIST", self.subscribers
         self.subscribers = [ x for x in self.subscribers if x != callback ]
 
     @actor_method
-    def publish(self, data):
+    def unsubscribe_bridge(self, callback):
+        self.bridge_subscribers = [ x for x in self.bridge_subscribers if x != callback ]
+
+    @actor_method
+    def publish(self, data):   # Data coming in not from a bridge
+        for subscriber in self.subscribers:
+            subscriber(data)
+
+        for subscriber in self.bridge_subscribers:
+            subscriber(data)
+
+    @actor_method
+    def publish_bridge(self, data):  # Data coming in from other bridges - only forward internally
         for subscriber in self.subscribers:
             subscriber(data)
 
