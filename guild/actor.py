@@ -9,11 +9,13 @@ from threading import Thread as _Thread
 import Queue as _Queue
 import sys
 
-__all__ = ["Actor", "actor_method", "process_method", "late_bind", "UnboundActorMethod", "late_bind_safe", "pipe", "wait_for", "stop", "pipeline", "wait_KeyboardInterrupt", "start" ]
+__all__ = ["Actor", "actor_method", "actor_function", "process_method", "late_bind", "UnboundActorMethod", "late_bind_safe", "pipe", "wait_for", "stop", "pipeline", "wait_KeyboardInterrupt", "start" ]
 
 import time
 class UnboundActorMethod(Exception):
     pass
+
+#ACTORFUNCTION
 
 class ActorMetaclass(type):
     def __new__(cls, clsname, bases, dct):
@@ -21,16 +23,27 @@ class ActorMetaclass(type):
         for name,val in dct.items():
             if hasattr(val,"__call__"):
                 new_dct[name] = val
-            else:
-              if val.__class__ == tuple and len(val) == 2 and str(val[0]).startswith("ACTORMETHOD"):
+            elif val.__class__ == tuple and len(val) == 2 and str(val[0]).startswith("ACTORMETHOD"):
                   def mkcallback(func):
                       def t(self, *args, **argd):
                           self.inbound.put_nowait( (func, self, args, argd) )
                       return t
 
                   new_dct[name] = mkcallback(val[1])
-              else:
-                  if val.__class__ == tuple and len(val) == 2 and str(val[0]).startswith("PROCESSMETHOD"):
+            elif val.__class__ == tuple and len(val) == 2 and str(val[0]).startswith("ACTORFUNCTION"):
+                  def mkcallback(func):
+                      resultQueue = _Queue.Queue()
+                      def t(self, *args, **argd):
+                          print "OK, in here"
+                          self.F_inbound.put_nowait( ( (func, self, args, argd), resultQueue) )
+                          print "I put it!!!"
+                          result = resultQueue.get(True, None)
+                          print "I got result", result
+                          return result
+                      return t
+
+                  new_dct[name] = mkcallback(val[1])
+            elif val.__class__ == tuple and len(val) == 2 and str(val[0]).startswith("PROCESSMETHOD"):
                       def mkcallback(func):
                           def s(self, *args, **argd):
                               x = func(self)
@@ -41,8 +54,7 @@ class ActorMetaclass(type):
                           return s
 
                       new_dct[name] = mkcallback(val[1])
-                  else:
-                      if val.__class__ == tuple and len(val) == 2 and str(val[0]) == ("LATEBIND"):
+            elif val.__class__ == tuple and len(val) == 2 and str(val[0]) == ("LATEBIND"):
                           # print "latebind", name, clsname
                           def mkcallback(func):
                               def s(self, *args, **argd):
@@ -51,8 +63,7 @@ class ActorMetaclass(type):
                                   self.inbound.put_nowait( (func, self, args, argd) )
                               return s
                           new_dct[name] = mkcallback(val[1])
-                      else:
-                          if val.__class__ == tuple and len(val) == 2 and str(val[0]) == ("LATEBINDSAFE"):
+            elif val.__class__ == tuple and len(val) == 2 and str(val[0]) == ("LATEBINDSAFE"):
                               # print "latebindsafe", name, clsname
                               def mkcallback(func):
                                   def t(self, *args, **argd):
@@ -60,7 +71,7 @@ class ActorMetaclass(type):
                                   return t
 
                               new_dct[name] = mkcallback(val[1])
-                          else:
+            else:
                               new_dct[name] = val
 
 
@@ -79,6 +90,9 @@ def actor_method_lossy_queue(length):
 def actor_method(method):
     return ("ACTORMETHOD", method)
 
+def actor_function(fn):
+    return ("ACTORFUNCTION", fn)
+
 def process_method(method):
     return ("PROCESSMETHOD", method)
 
@@ -93,6 +107,7 @@ class Actor(_Thread):
     daemon = True
     def __init__(self):
         self.inbound = _Queue.Queue()
+        self.F_inbound = _Queue.Queue()
         self.core = _Queue.Queue()
         self.killflag = False
         super(Actor,self).__init__()
@@ -118,7 +133,8 @@ class Actor(_Thread):
         callback, zelf, argv, argd = command
         if zelf:
             try:
-                callback(zelf, *argv, **argd)
+                result = callback(zelf, *argv, **argd)
+                return result
             except TypeError:
               import sys
               sys.stderr.write("FAILURE -- ")
@@ -129,7 +145,8 @@ class Actor(_Thread):
               print "self", self
               raise
         else:
-            callback(*argv, **argd)
+            result = callback(*argv, **argd)
+            return result
 
     def process_start(self):
         pass
@@ -150,11 +167,17 @@ class Actor(_Thread):
             if g != None:
                 g.next()
             yield 1
-            if self.inbound.qsize() > 0 or  self.core.qsize() > 0:
+            if self.F_inbound.qsize() > 0 or  self.inbound.qsize() > 0 or  self.core.qsize() > 0:
 
                if self.inbound.qsize() > 0:
                     command = self.inbound.get_nowait()
                     self.interpret(command)
+
+               if self.F_inbound.qsize() > 0:
+                    print "OK, got function"
+                    command, result_queue = self.F_inbound.get_nowait()
+                    result = self.interpret(command)
+                    result_queue.put_nowait(result)
 
                if self.core.qsize() > 0:
                     #print self.core.qsize()
