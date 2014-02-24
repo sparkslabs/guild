@@ -8,5 +8,8 @@ for the purposes of enabling pipelining.
 
 It's inspired by Kamaelia, but with all the ugly parts removed.
 
+The ability to have dynamic actor methods would be useful.
+
+
 
 Michael.
