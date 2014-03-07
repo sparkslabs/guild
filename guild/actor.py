@@ -203,7 +203,7 @@ class Actor(_Thread):
         self.start()
         return self
 
-    @late_bind
+    @late_bind_safe
     def output(self, *argv, **argd):
         pass
 
