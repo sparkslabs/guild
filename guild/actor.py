@@ -9,11 +9,16 @@ from threading import Thread as _Thread
 import Queue as _Queue
 import sys
 
-__all__ = ["Actor", "actor_method", "actor_function", "process_method", "late_bind", "UnboundActorMethod", "late_bind_safe", "pipe", "wait_for", "stop", "pipeline", "wait_KeyboardInterrupt", "start" ]
+__all__ = ["Actor", "actor_method", "actor_function", "process_method", "late_bind", "UnboundActorMethod", "ActorException", "late_bind_safe", "pipe", "wait_for", "stop", "pipeline", "wait_KeyboardInterrupt", "start" ]
 
 import time
 class UnboundActorMethod(Exception):
     pass
+
+class ActorException(Exception):
+    def __init__(self, *argv, **argd):
+        super(ActorException, self).__init__(*argv)
+        self.__dict__.update(argd)
 
 #ACTORFUNCTION
 
@@ -34,11 +39,15 @@ class ActorMetaclass(type):
                   def mkcallback(func):
                       resultQueue = _Queue.Queue()
                       def t(self, *args, **argd):
-                          print "OK, in here"
+                          # print "OK, in here"
                           self.F_inbound.put_nowait( ( (func, self, args, argd), resultQueue) )
-                          print "I put it!!!"
-                          result = resultQueue.get(True, None)
-                          print "I got result", result
+                          # print "I put it!!!"
+                          e, result = resultQueue.get(True, None)
+                          # print "I got result", result
+                          if e != 0:
+                              # print "Failed! :-)"
+                              # print sys.exc_info()[2]
+                              raise e.__class__, e, e.sys_exc_info
                           return result
                       return t
 
@@ -47,7 +56,7 @@ class ActorMetaclass(type):
                       def mkcallback(func):
                           def s(self, *args, **argd):
                               x = func(self)
-                              #print "HM", x
+                              # print "HM", x
                               if x == False:
                                 return
                               self.core.put_nowait( (s, self, (),{} ) )
@@ -58,7 +67,7 @@ class ActorMetaclass(type):
                           # print "latebind", name, clsname
                           def mkcallback(func):
                               def s(self, *args, **argd):
-                                  print "WARNING to unbound late bound actor method"
+                                  # print "WARNING to unbound late bound actor method"
                                   raise UnboundActorMethod("Call to Unbound Latebind")
                                   self.inbound.put_nowait( (func, self, args, argd) )
                               return s
@@ -142,7 +151,7 @@ class Actor(_Thread):
               sys.stderr.write(", ".join([repr(x) for x in command]))
               sys.stderr.write("\n")
               sys.stderr.flush()
-              print "self", self
+              # print "self", self
               raise
         else:
             result = callback(*argv, **argd)
@@ -171,13 +180,24 @@ class Actor(_Thread):
 
                if self.inbound.qsize() > 0:
                     command = self.inbound.get_nowait()
-                    self.interpret(command)
+                    try:
+                        self.interpret(command)
+                    except:
+                        self.stop()
 
                if self.F_inbound.qsize() > 0:
-                    print "OK, got function"
+                    # print "OK, got function"
                     command, result_queue = self.F_inbound.get_nowait()
-                    result = self.interpret(command)
-                    result_queue.put_nowait(result)
+                    result_fail = 0
+                    try:
+                        result = self.interpret(command)
+                    except Exception as e:
+                        result_fail = e
+                        result_fail.sys_exc_info = sys.exc_info()[2]
+                        # print "FAIL" 
+                        # print sys.exc_info()[2]
+                        # print "FAIL!"
+                    result_queue.put_nowait( (result_fail, result) )
 
                if self.core.qsize() > 0:
                     #print self.core.qsize()
