@@ -54,15 +54,15 @@ class MoneySource(Actor):
 account = Account(1000).go()
 
 if False:
-    print "Frank\tWilma\tBetty"
-    frank, wilma, betty = 0,0,0
+    print "Fred\tBarney\tWilma"
+    fred, wilma, betty = 0,0,0
     try:
         while True:
             account.deposit(100)
-            frank += account.withdraw(random.choice([10,20,40,80,160]))
-            betty += account.withdraw(random.choice([10,20,40,80,160]))
+            fred += account.withdraw(random.choice([10,20,40,80,160]))
+            barney += account.withdraw(random.choice([10,20,40,80,160]))
             wilma += account.withdraw(random.choice([10,20,40,80,160]))
-            print frank, "\t", wilma, "\t", betty
+            print fred, "\t", wilma, "\t", betty
     except InsufficientFunds as e:
         print e.message
         print "Balance", e.balance
@@ -72,7 +72,7 @@ if False:
 
     print "GAME OVER"
 
-    print "Frank grabbed", frank
+    print "Fred grabbed", fred
     print "Wilma grabbed", wilma
     print "Betty grabbed", betty
 
@@ -81,24 +81,24 @@ if False:
 
 else:
 
-    frank = MoneyDrain(account).go()
-    wilma = MoneyDrain(account).go()
+    fred = MoneyDrain(account).go()
+    barney = MoneyDrain(account).go()
+    wilma = MoneySource(account).go()
     betty = MoneyDrain(account).go()
-    barny = MoneySource(account).go()
 
-    wait_for(frank, wilma, betty)
-    barny.stop()
-    barny.join()
+    wait_for(fred, barney, betty)
+    wilma.stop()
+    wilma.join()
 
     account.stop()
     account.join()
-    
+
     print "GAME OVER"
 
-    print "Frank grabbed", frank.grabbed
-    print "Wilma grabbed", wilma.grabbed
+    print "Fred grabbed", fred.grabbed
+    print "Wilma grabbed", barney.grabbed
     print "Betty grabbed", betty.grabbed
-    print "Total grabbed", frank.grabbed + wilma.grabbed + betty.grabbed
+    print "Total grabbed", fred.grabbed + barney.grabbed + betty.grabbed
     print "Since they stopped grabbing..."
     print "Money left", account.balance
 
