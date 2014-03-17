@@ -27,10 +27,6 @@ class Account(Actor):
         print "WITHDRAW", "\t", amount, "\t", self.balance
         return amount
 
-    @actor_function
-    def sufficient_funds_for_withdrawl(self, amount):
-        return self.balance >= amount
-
 def transfer(amount, payer, payee):
     funds = payer.withdraw(amount)
     payee.deposit(funds)
