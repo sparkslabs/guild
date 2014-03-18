@@ -70,6 +70,7 @@ print "Barney grabbed", barney.grabbed
 print "Total grabbed", fred.grabbed + barney.grabbed
 print "Since they stopped grabbing..."
 print "Money left", account1.balance, account2.balance
+print "Ending money", account1.balance + account2.balance
 
 
 
