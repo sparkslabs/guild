@@ -121,6 +121,7 @@ class Actor(_Thread):
         self.killflag = False
         super(Actor,self).__init__()
         self._uThread = None
+        self._g = None
 
     def run(self):
         self._uThread = self.main()
@@ -132,9 +133,17 @@ class Actor(_Thread):
                 break
             if self.killflag:
                 self.onStop()
+                dobreak = False
                 try:
                     self._uThread.throw(StopIteration)
                 except StopIteration:
+                    dobreak = True
+                try:
+                    if self._g:
+                        self._g.throw(StopIteration)
+                except StopIteration:
+                    dobreak = True
+                if dobreak:
                     break
 
     def interpret(self, command):
@@ -172,6 +181,7 @@ class Actor(_Thread):
         except:
             # print "HM", self
             g = None
+        self._g = g
         while True:
             if g != None:
                 g.next()
