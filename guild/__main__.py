@@ -7,5 +7,5 @@ import guild
 guild.init()
 guild.register("hello", 5)
 x = guild.lookup("hello")
-assert x==5
+assert x == 5
 print "Self test successful"

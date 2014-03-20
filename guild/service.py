@@ -5,13 +5,14 @@ import sys
 import json
 
 try:
-    config=json.load(open("/etc/guildservice/config.json"))
+    config = json.load(open("/etc/guildservice/config.json"))
 except IOError:
-    config=json.load(open("../etc/guildservice/config.json"))
+    config = json.load(open("../etc/guildservice/config.json"))
 
-logfile="/var/log/guildservice/service.log"
+logfile = "/var/log/guildservice/service.log"
 start = time.time()
 count = 0
+
 
 def log(*what):
     global count
@@ -31,6 +32,7 @@ def log(*what):
     f.flush()
     f.close()
 
+
 def main():
     log("startup")
     log(*sys.argv)
@@ -39,7 +41,7 @@ def main():
         log("testing myservice")
         time.sleep(5)
 
+
 if __name__ == "__main__":
     logfile = "guild.service.log"
     main()
-

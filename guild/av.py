@@ -1,6 +1,5 @@
 #!usr/bin/python
 
-from guild.actor import *
 import os
 import time
 import wave
@@ -11,6 +10,7 @@ import pyaudio
 import pygame
 import pygame.camera
 
+from guild.actor import *
 
 pygame.init()
 pygame.camera.init()
@@ -22,141 +22,146 @@ modes = {
         }
 
 vidsize = (320, 240)
-#vidsize = (1280, 720)
 
-p = pyaudio.PyAudio()  # Global. Undecided if this is a good or bad thing. Currently that's the way it is.
+# Global. Undecided if this is a good or bad thing.
+# Currently that's the way it is.
+p = pyaudio.PyAudio()
+
 
 class AudioCapture(Actor):
-  def gen_process(self):
-    global p
-    yield 1
-    CHUNK = 2048
-    FORMAT = pyaudio.paInt16
-    RECORD_SECONDS = 5
-
-
-    device_count = p.get_device_count()
-
-    devices = {}
-
-    for i in range(device_count):
-        info = p.get_device_info_by_index(i)
-        devices[ info["name"] ] = info
-
-    #
-    # Look for the USB device with ID "0x46d:0x825"
-    # Again, highly specific with good reason.
-    #
-    device_names = [x for x in devices.keys() if ("USB" in x) and ("0x46d:0x825" in x)]
-    device = devices[device_names[0]]
-
-    RATE = int(device.get("defaultSampleRate",44100))
-    CHANNELS = int(device.get("maxInputChannels",2))
-    DEVICE_INDEX = int(device.get("index",0))
-
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    input_device_index = DEVICE_INDEX,
-                    frames_per_buffer=CHUNK)
-
-    print("* recording")
-
-    frames = []
-
-    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = stream.read(CHUNK)
-        self.output(data, time.time())
+    def gen_process(self):
+        global p
         yield 1
+        CHUNK = 2048
+        FORMAT = pyaudio.paInt16
+        RECORD_SECONDS = 5
 
-    self.output(None, 0)
-    print("* done recording")
+        device_count = p.get_device_count()
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+        devices = {}
 
-  @late_bind
-  def output(self, frame, timestamp):
-      pass
+        for i in range(device_count):
+            info = p.get_device_info_by_index(i)
+            devices[info["name"]] = info
+
+        #
+        # Look for the USB device with ID "0x46d:0x825"
+        # Again, highly specific with good reason.
+        #
+        device_names = [x for x in devices.keys() if (("USB" in x) and ("0x46d:0x825" in x))]
+
+        device = devices[device_names[0]]
+
+        RATE = int(device.get("defaultSampleRate", 44100))
+        CHANNELS = int(device.get("maxInputChannels", 2))
+        DEVICE_INDEX = int(device.get("index", 0))
+
+        stream = p.open(format=FORMAT,
+                        channels=CHANNELS,
+                        rate=RATE,
+                        input=True,
+                        input_device_index=DEVICE_INDEX,
+                        frames_per_buffer=CHUNK)
+
+        print("* recording")
+
+        frames = []
+
+        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+            data = stream.read(CHUNK)
+            self.output(data, time.time())
+            yield 1
+
+        self.output(None, 0)
+        print("* done recording")
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+    @late_bind
+    def output(self, frame, timestamp):
+        pass
+
 
 class WaveWriter(Actor):
-  def __init__(self):
-    self.frames = []
-    self.CHANNELS = 1
-    self.FORMAT = pyaudio.paInt16
-    self.WAVE_OUTPUT_FILENAME = "output.wav"
-    self.RATE = 48000
+    def __init__(self):
+        self.frames = []
+        self.CHANNELS = 1
+        self.FORMAT = pyaudio.paInt16
+        self.WAVE_OUTPUT_FILENAME = "output.wav"
+        self.RATE = 48000
 
-    super(WaveWriter,self).__init__()
+        super(WaveWriter, self).__init__()
 
-  @actor_method
-  def record(self, audio, timestamp):
-      global p
+    @actor_method
+    def record(self, audio, timestamp):
+        global p
 
-      if audio != None:
-          self.frames.append(audio)
-      else:
-          wf = wave.open(self.WAVE_OUTPUT_FILENAME, 'wb')
-          wf.setnchannels(self.CHANNELS)
-          wf.setsampwidth(p.get_sample_size(self.FORMAT))
-          wf.setframerate(self.RATE)
-          wf.writeframes(b''.join(self.frames))
-          wf.close()
-          self.stop()
+        if audio != None:
+            self.frames.append(audio)
+        else:
+            wf = wave.open(self.WAVE_OUTPUT_FILENAME, 'wb')
+            wf.setnchannels(self.CHANNELS)
+            wf.setsampwidth(p.get_sample_size(self.FORMAT))
+            wf.setframerate(self.RATE)
+            wf.writeframes(b''.join(self.frames))
+            wf.close()
+            self.stop()
 
 
 class WebCamTest(Actor):
     def gen_process(self):
-      device = "/dev/video0"
+        device = "/dev/video0"
 
-      capturesize = vidsize
-      camera = pygame.camera.Camera(device, capturesize)
-      camera.start()
-      count = 0
-      ts = time.time()
-      print "START"
-      while True:
-        time.sleep(0.02)
-        yield 1
-        count += 1
-        snapshot = camera.get_image()
-        now = time.time()
-        try:
-            self.produce(snapshot,now)
-        except:
-            pass
-        if count > 30:
-           print ts, time.time(), "Count", count,
-           dur = time.time()-ts
-           if dur > 0:
-             print "RATE: ", count/( time.time()-ts)
-           count = 0
-           ts = time.time()
+        capturesize = vidsize
+        camera = pygame.camera.Camera(device, capturesize)
+        camera.start()
+        count = 0
+        ts = time.time()
+        print "START"
+        while True:
+            time.sleep(0.02)
+            yield 1
+            count += 1
+            snapshot = camera.get_image()
+            now = time.time()
+            try:
+                self.produce(snapshot, now)
+            except:
+                pass
+            if count > 30:
+                print ts, time.time(), "Count", count,
+                dur = time.time() - ts
+                if dur > 0:
+                    print "RATE: ", count / (time.time() - ts)
+                count = 0
+                ts = time.time()
 
     @late_bind
     def produce(self, image, timestamp):
         pass
 
+
 class SomeDisplay(Actor):
     def __init__(self):
-        super(SomeDisplay,self).__init__()
+        super(SomeDisplay, self).__init__()
         displaysize = vidsize
         self.display = pygame.display.set_mode(displaysize)
         self.frames = []
 
     @actor_method
-    def show(self,image, timestamp):
+    def show(self, image, timestamp):
         # pass
         self.frames.append((image, timestamp))
-        self.display.blit(image, (0,0) )
+        self.display.blit(image, (0, 0))
         pygame.display.flip()
 
     def onStop(self):
         if len(self.frames) > 0:
             for image, timestamp in self.frames:
-                pygame.image.save(image, "snaps/"+str(timestamp)+".png")
+                pygame.image.save(image, "snaps/" + str(timestamp) + ".png")
+
 
 if __name__ == "__main__":
     if False:
