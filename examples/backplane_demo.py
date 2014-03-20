@@ -5,10 +5,12 @@ import time
 from guild.actor import *
 from guild.components import Backplane, PublishTo, SubscribeTo, Printer
 
+
 class Producer(Actor):
     @process_method
     def process(self):
         self.output("hello")
+
     @late_bind_safe
     def output(self, value):
         pass

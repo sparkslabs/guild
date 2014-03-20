@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
-from guild.actor import *
 import random
+from guild.actor import *
+
 
 class InsufficientFunds(ActorException):
     pass
+
 
 class Account(Actor):
     def __init__(self, balance=10):
@@ -13,18 +15,21 @@ class Account(Actor):
 
     @actor_function
     def deposit(self, amount):
-        # I've made this a function to allow the value to be confirmed deposited
+        # This is a function to allow the deposit to be confirmed
         print "DEPOSIT", "\t", amount, "\t", self.balance
         self.balance = self.balance + amount
-        return self.balance 
+        return self.balance
 
     @actor_function
     def withdraw(self, amount):
         if self.balance < amount:
-            raise InsufficientFunds("Insufficient Funds in your account", requested=amount, balance=self.balance)
+            raise InsufficientFunds("Insufficient Funds in your account",
+                                    requested=amount,
+                                    balance=self.balance)
         self.balance = self.balance - amount
         print "WITHDRAW", "\t", amount, "\t", self.balance
         return amount
+
 
 class MoneyDrain(Actor):
     def __init__(self, sharedaccount):
@@ -35,12 +40,14 @@ class MoneyDrain(Actor):
     @process_method
     def process(self):
         try:
-            grabbed = self.sharedaccount.withdraw(random.choice([10,20,40,80,160]))
+            to_grab = random.choice([10, 20, 40, 80, 160])
+            grabbed = self.sharedaccount.withdraw(to_grab)
         except InsufficientFunds as e:
             print "Awww, Tapped out", e.balance, "<", e.requested
             self.stop()
             return
         self.grabbed = self.grabbed + grabbed
+
 
 class MoneySource(Actor):
     def __init__(self, sharedaccount):
@@ -49,7 +56,8 @@ class MoneySource(Actor):
 
     @process_method
     def process(self):
-        self.sharedaccount.deposit(random.randint(1,100))
+        self.sharedaccount.deposit(random.randint(1, 100))
+
 
 account = Account(1000).go()
 
@@ -57,7 +65,7 @@ fred = MoneyDrain(account).go()
 barney = MoneyDrain(account).go()
 betty = MoneyDrain(account).go()
 
-wilma = MoneySource(account).go() # Wilma carries all of them.
+wilma = MoneySource(account).go()  # Wilma carries all of them.
 
 wait_for(fred, barney, betty)
 wilma.stop()
@@ -74,6 +82,3 @@ print "Betty grabbed", betty.grabbed
 print "Total grabbed", fred.grabbed + barney.grabbed + betty.grabbed
 print "Since they stopped grabbing..."
 print "Money left", account.balance
-
-
-

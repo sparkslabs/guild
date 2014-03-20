@@ -3,6 +3,7 @@
 import time
 from guild.actor import *
 
+
 class Woofie(Actor):
     @actor_method
     def bark(self):
@@ -16,7 +17,7 @@ woofie = Woofie()
 
 woofie.start()
 
-time.sleep(0.01) # Give woofie a chance
+time.sleep(0.01)     # Give woofie a chance
 name = woofie.name()
 print "NAME", name
 woofie.bark()
