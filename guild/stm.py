@@ -429,7 +429,10 @@ class Store(object):
             print("     ", k, ":", self.store[k])
         print ()
 
-    def checkout(self):
+#    def usevar(self, key, islocked=False):
+    def checkout(self, key=None, islocked=False):
+        if key is not None:
+            return self.usevar(key, islocked)
         return STMCheckout(self)
 
 
