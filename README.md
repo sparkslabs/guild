@@ -113,7 +113,7 @@ does use the normal blocking sleep function.
 The Display Actor initialises by capturing the passed parameters. Once the
 actor has started, its process_start method is called, enabling it to
 create a display, it then sits and waits for messages.  These arrive when a
-caller calls the actor method 'show' our its alias 'input'.  When that
+caller calls the actor method 'show' or its alias 'input'.  When that
 happens the upshot is that the show method is called, but in a threadsafe
 way - and it simply displays the image.
 
