@@ -111,7 +111,7 @@ grabbing frames for output to be clearly expressed.  Note also this actor
 does use the normal blocking sleep function.
 
 The Display Actor initialises by capturing the passed parameters. Once the
-actor has started, it's process_start method is called, enabling it to
+actor has started, its process_start method is called, enabling it to
 create a display, it then sits and waits for messages.  These arrive when a
 caller calls the actor method 'show' our its alias 'input'.  When that
 happens the upshot is that the show method is called, but in a threadsafe
@@ -220,7 +220,7 @@ for display.  Each actor shows slightly different aspects of Guild's model.
   actor call to its input method results in any matching lines to be passed
   through via its output method.
 
-* **Printer** is a simple reactive actor. Any actor call to it's input
+* **Printer** is a simple reactive actor. Any actor call to its input
   method results in the data passed in being sent to stdout.
 
 #### Work in progress ####
@@ -380,7 +380,7 @@ About a year ago, I was working on a project with an aim of investigating
 various ideas relating to of the Internet of Things. (In particular, which
 definition of that really mattered to us, why, and what options it provided)
 
-As part of that project, I wrote a small/just big though library suitable
+As part of that project, I wrote a small/just big enough library suitable
 for testing some ideas I'd had regarding integrating some ideas in Kamaelia,
 with the syntactic sugar in the actor model.  Essentially, to map Kamaelia's
 inboxes and messages to traditional actor methods, and maps outboxes to late
