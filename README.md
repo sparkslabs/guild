@@ -387,7 +387,7 @@ inboxes and messages to traditional actor methods, and maps outboxes to late
 bound actor methods.  Use of standard names and/or aliases would allow
 pipelining.
 
-Guild was the result, and it's proven itself useful in a couple out
+Guild was the result, and it's proven itself useful in a couple of
 projects, hence its packaging as a standalone library.  Like all such
 things, it's a work in progress, but it also has a cleaner to use version of
 Kamaelia's STM code, and includes some of the more useful components like
