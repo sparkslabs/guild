@@ -30,6 +30,11 @@ class ActorException(Exception):
 class ActorMetaclass(type):
     def __new__(cls, clsname, bases, dct):
         new_dct = {}
+        new_dct['actor_methods'] = []
+        new_dct['actor_functions'] = []
+        new_dct['process_methods'] = []
+        new_dct['late_binds'] = []
+        new_dct['late_bind_safes'] = []
         for name, val in dct.items():
             new_dct[name] = val
             if val.__class__ == tuple and len(val) == 2:
@@ -42,6 +47,7 @@ class ActorMetaclass(type):
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['actor_methods'].append(name)
 
                 elif tag.startswith("ACTORFUNCTION"):
                     def mkcallback(func):
@@ -58,6 +64,7 @@ class ActorMetaclass(type):
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['actor_functions'].append(name)
 
                 elif tag.startswith("PROCESSMETHOD"):
                     def mkcallback(func):
@@ -70,6 +77,7 @@ class ActorMetaclass(type):
                         return s
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['process_methods'].append(name)
 
                 elif tag == "LATEBIND":
                     def mkcallback(func):
@@ -78,6 +86,7 @@ class ActorMetaclass(type):
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
                     new_dct[name] = mkcallback(fn)
+                    new_dct['late_binds'].append(name)
 
                 elif tag == "LATEBINDSAFE":
                     # print "latebindsafe", name, clsname
@@ -88,6 +97,7 @@ class ActorMetaclass(type):
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['late_bind_safes'].append(name)
 
         return type.__new__(cls, clsname, bases, new_dct)
 
