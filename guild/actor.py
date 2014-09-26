@@ -5,6 +5,7 @@
 # from actor import *
 #
 
+from functools import wraps as _wraps
 import Queue as _Queue
 import sys
 from threading import Thread as _Thread
@@ -35,6 +36,7 @@ class ActorMetaclass(type):
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
                         return t
@@ -45,6 +47,7 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         resultQueue = _Queue.Queue()
 
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
                             self.F_inbound.put_nowait((op, resultQueue))
@@ -58,6 +61,7 @@ class ActorMetaclass(type):
 
                 elif tag.startswith("PROCESSMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             x = func(self)
                             if x == False:
@@ -69,6 +73,7 @@ class ActorMetaclass(type):
 
                 elif tag == "LATEBIND":
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
@@ -77,6 +82,7 @@ class ActorMetaclass(type):
                 elif tag == "LATEBINDSAFE":
                     # print "latebindsafe", name, clsname
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
                         return t
