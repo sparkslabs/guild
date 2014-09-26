@@ -5,6 +5,7 @@
 # from actor import *
 #
 
+from functools import wraps as _wraps
 import Queue as _Queue
 import sys
 from threading import Thread as _Thread
@@ -29,22 +30,30 @@ class ActorException(Exception):
 class ActorMetaclass(type):
     def __new__(cls, clsname, bases, dct):
         new_dct = {}
+        new_dct['actor_methods'] = []
+        new_dct['actor_functions'] = []
+        new_dct['process_methods'] = []
+        new_dct['late_binds'] = []
+        new_dct['late_bind_safes'] = []
         for name, val in dct.items():
             new_dct[name] = val
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['actor_methods'].append(name)
 
                 elif tag.startswith("ACTORFUNCTION"):
                     def mkcallback(func):
                         resultQueue = _Queue.Queue()
 
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
                             self.F_inbound.put_nowait((op, resultQueue))
@@ -55,9 +64,11 @@ class ActorMetaclass(type):
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['actor_functions'].append(name)
 
                 elif tag.startswith("PROCESSMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             x = func(self)
                             if x == False:
@@ -66,22 +77,27 @@ class ActorMetaclass(type):
                         return s
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['process_methods'].append(name)
 
                 elif tag == "LATEBIND":
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
                     new_dct[name] = mkcallback(fn)
+                    new_dct['late_binds'].append(name)
 
                 elif tag == "LATEBINDSAFE":
                     # print "latebindsafe", name, clsname
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
                         return t
 
                     new_dct[name] = mkcallback(fn)
+                    new_dct['late_bind_safes'].append(name)
 
         return type.__new__(cls, clsname, bases, new_dct)
 
