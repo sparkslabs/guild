@@ -10,7 +10,8 @@ import sys
 from threading import Thread as _Thread
 import time
 
-__all__ = ["Actor", "actor_method", "actor_function", "process_method",
+__all__ = ["Actor", "ActorMixin", "ActorMetaclass",
+           "actor_method", "actor_function", "process_method",
            "late_bind", "UnboundActorMethod", "ActorException",
            "late_bind_safe", "pipe", "wait_for", "stop", "pipeline",
            "wait_KeyboardInterrupt", "start"]
@@ -37,6 +38,7 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
+                            self._actor_notify()
                         return t
 
                     new_dct[name] = mkcallback(fn)
@@ -48,6 +50,7 @@ class ActorMetaclass(type):
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
                             self.F_inbound.put_nowait((op, resultQueue))
+                            self._actor_notify()
                             e, result = resultQueue.get(True, None)
                             if e != 0:
                                 raise e.__class__, e, e.sys_exc_info
@@ -79,6 +82,7 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         def t(self, *args, **argd):
                             self.inbound.put_nowait((func, self, args, argd))
+                            self._actor_notify()
                         return t
 
                     new_dct[name] = mkcallback(fn)
@@ -118,14 +122,100 @@ def late_bind_safe(method):
     return ("LATEBINDSAFE", method)
 
 
-class Actor(_Thread):
+class ActorMixin(object):
     __metaclass__ = ActorMetaclass
-    daemon = True
 
     def __init__(self):
         self.inbound = _Queue.Queue()
         self.F_inbound = _Queue.Queue()
         self.core = _Queue.Queue()
+        super(ActorMixin, self).__init__()
+
+    def interpret(self, command):
+        # print command
+        callback, zelf, argv, argd = command
+        if zelf:
+            try:
+                result = callback(zelf, *argv, **argd)
+                return result
+            except TypeError:
+                import sys
+                sys.stderr.write("FAILURE -- ")
+                sys.stderr.write("command (callback, zelf, argv, argd): ")
+                sys.stderr.write(", ".join([repr(x) for x in command]))
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+                # print "self", self
+                raise
+        else:
+            result = callback(*argv, **argd)
+            return result
+
+    def process_start(self):
+        pass
+
+    def onStop(self):
+        pass
+
+    @process_method
+    def process(self):
+        return False
+
+    @actor_method
+    def bind(self, source, dest, destmeth):
+        setattr(self, source, getattr(dest, destmeth))
+
+    def go(self):
+        self.start()
+        return self
+
+    @late_bind_safe
+    def output(self, *argv, **argd):
+        pass
+
+    @actor_method
+    def input(self, *argv, **argd):
+        pass
+
+    def _actor_notify(self):
+        pass
+
+    def _actor_do_queued(self):
+        if (self.F_inbound.qsize() <= 0 and
+            self.inbound.qsize() <= 0 and
+            self.core.qsize() <= 0):
+            return False
+
+        if self.inbound.qsize() > 0:
+            command = self.inbound.get_nowait()
+            try:
+                self.interpret(command)
+            except:
+                self.stop()
+
+        if self.F_inbound.qsize() > 0:
+            command, result_queue = self.F_inbound.get_nowait()
+            result_fail = 0
+            try:
+                result = self.interpret(command)
+            except Exception as e:
+                result_fail = e
+                result_fail.sys_exc_info = sys.exc_info()[2]
+
+            result_queue.put_nowait((result_fail, result))
+
+        if self.core.qsize() > 0:
+            command = self.core.get_nowait()
+            self.interpret(command)
+
+        return True
+
+
+class Actor(_Thread, ActorMixin):
+    daemon = True
+
+    def __init__(self):
+        ActorMixin.__init__(self)
         self.killflag = False
         super(Actor, self).__init__()
         self._uThread = None
@@ -154,32 +244,6 @@ class Actor(_Thread):
                 if dobreak:
                     break
 
-    def interpret(self, command):
-        # print command
-        callback, zelf, argv, argd = command
-        if zelf:
-            try:
-                result = callback(zelf, *argv, **argd)
-                return result
-            except TypeError:
-                import sys
-                sys.stderr.write("FAILURE -- ")
-                sys.stderr.write("command (callback, zelf, argv, argd): ")
-                sys.stderr.write(", ".join([repr(x) for x in command]))
-                sys.stderr.write("\n")
-                sys.stderr.flush()
-                # print "self", self
-                raise
-        else:
-            result = callback(*argv, **argd)
-            return result
-
-    def process_start(self):
-        pass
-
-    def onStop(self):
-        pass
-
     def main(self):
         self.process_start()
         self.process()
@@ -192,57 +256,12 @@ class Actor(_Thread):
             if g != None:
                 g.next()
             yield 1
-            if (self.F_inbound.qsize() > 0 or
-                self.inbound.qsize() > 0 or
-                self.core.qsize() > 0):
-
-                if self.inbound.qsize() > 0:
-                    command = self.inbound.get_nowait()
-                    try:
-                        self.interpret(command)
-                    except:
-                        self.stop()
-
-                if self.F_inbound.qsize() > 0:
-                    command, result_queue = self.F_inbound.get_nowait()
-                    result_fail = 0
-                    try:
-                        result = self.interpret(command)
-                    except Exception as e:
-                        result_fail = e
-                        result_fail.sys_exc_info = sys.exc_info()[2]
-
-                    result_queue.put_nowait((result_fail, result))
-
-                if self.core.qsize() > 0:
-                    command = self.core.get_nowait()
-                    self.interpret(command)
-            else:
+            if not self._actor_do_queued():
                 if g == None:
                     time.sleep(0.01)
 
-    @process_method
-    def process(self):
-        return False
-
     def stop(self):
         self.killflag = True
-
-    @actor_method
-    def bind(self, source, dest, destmeth):
-        setattr(self, source, getattr(dest, destmeth))
-
-    def go(self):
-        self.start()
-        return self
-
-    @late_bind_safe
-    def output(self, *argv, **argd):
-        pass
-
-    @actor_method
-    def input(self, *argv, **argd):
-        pass
 
 
 def pipe(source, source_box, sink, sinkbox):
