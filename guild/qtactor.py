@@ -8,6 +8,7 @@ from actor import ActorMixin, ActorMetaclass
 class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
     pass
 
+
 class QtActorMixin(ActorMixin):
     __metaclass__ = _QtActorMixinMetaclass
 
@@ -93,3 +94,15 @@ class QtActorMixin(ActorMixin):
     def join(self):
         if self._qtactor_thread:
             self._qtactor_thread.wait()
+
+
+class ActorSignal(QtCore.QObject, QtActorMixin):
+    signal = QtCore.pyqtSignal(object)
+
+    def __init__(self):
+        super(ActorSignal, self).__init__()
+        QtActorMixin.__init__(self)
+
+    @actor_method
+    def input(self, msg):
+        self.signal.emit(msg)
