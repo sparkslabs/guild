@@ -123,6 +123,12 @@ def late_bind_safe(method):
 
 
 class ActorMixin(object):
+    """Actor mixin base class.
+
+    Provides partial implementation of a guild actor. Use with a
+    scheduler of some kind to create a complete actor base class.
+
+    """
     __metaclass__ = ActorMetaclass
 
     def __init__(self):
@@ -178,9 +184,24 @@ class ActorMixin(object):
         pass
 
     def _actor_notify(self):
+        """Alert scheduler to queued method invocation.
+
+        If your scheduler is event driven then over-ride this method
+        to trigger the scheduler (in a thread safe manner) to run
+        _actor_do_queued.
+
+        """
         pass
 
     def _actor_do_queued(self):
+        """Do queued method invocation.
+
+        The scheduler needs to call this method whenever there are
+        queued method invocations, or poll it at frequent intervals.
+
+        It returns False if there was nothing to do.
+
+        """
         if (self.F_inbound.qsize() <= 0 and
             self.inbound.qsize() <= 0 and
             self.core.qsize() <= 0):
@@ -211,11 +232,10 @@ class ActorMixin(object):
         return True
 
 
-class Actor(_Thread, ActorMixin):
+class Actor(ActorMixin, _Thread):
     daemon = True
 
     def __init__(self):
-        ActorMixin.__init__(self)
         self.killflag = False
         super(Actor, self).__init__()
         self._uThread = None

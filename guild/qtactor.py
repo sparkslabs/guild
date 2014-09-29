@@ -1,3 +1,22 @@
+"""Integrate guild with Qt.
+
+The QtActorMixin mixin class allows you to add actor functionality to
+any PyQt class. Your class runs in a Qt thread, unless it is a QWidget
+(or derived from QWidget) in which case it runs in the main Qt thread.
+Queued method invocations (@actor_method, @actor_function) are handled
+as Qt events.
+
+The ActorSignal class implements a simple bridge between guild and
+PyQt. Any object received by its guild input is emitted on its Qt
+signal. This allows guild and Qt components to be connected without
+modifying either.
+
+Qt signals can be connected directly to guild components' actor
+methods. Their queued invocation allows them to be called safely from
+a Qt thread.
+
+"""
+
 import socket
 import threading
 
