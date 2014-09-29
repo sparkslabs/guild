@@ -18,7 +18,7 @@ a Qt thread.
 """
 
 import socket
-import threading
+import sys
 
 from PyQt4 import QtCore, QtGui
 
@@ -33,15 +33,15 @@ class QtActorMixin(ActorMixin):
 
     def __init__(self, *argv, **argd):
         super(QtActorMixin, self).__init__(*argv, **argd)
+        self._qtactor_main_gen = None
+        # create unique event types
+        self._qtactor_step_event = QtCore.QEvent.registerEventType()
+        self._qtactor_stop_event = QtCore.QEvent.registerEventType()
         # set up QSocketNotifier to handle queued method notifications
         self._qtactor_rsock, self._qtactor_wsock = socket.socketpair()
         self._qtactor_notifier = QtCore.QSocketNotifier(
             self._qtactor_rsock.fileno(), QtCore.QSocketNotifier.Read)
         self._qtactor_notifier.activated.connect(self._qtactor_do_queued)
-        # signal to tell loop to exit
-        self._qtactor_kill = threading.Event()
-        self._qtactor_stopped = threading.Event()
-        self._qtactor_stopped.set()
         # if not a Widget, move to a Qt thread
         if isinstance(self, QtGui.QWidget):
             # widgets can't be moved to another thread
@@ -70,45 +70,50 @@ class QtActorMixin(ActorMixin):
     def _qtactor_run(self):
         # get main process generator
         self._qtactor_main_gen = self._qtactor_main()
-        if self._qtactor_thread:
-            # run generator continuously
-            while True:
-                try:
-                    self._qtactor_main_gen.next()
-                except StopIteration:
-                    break
-                QtCore.QCoreApplication.processEvents()
-        else:
-            # use a timer to run generator in the background
-            self._qtactor_timer = QtCore.QTimer()
-            self._qtactor_timer.timeout.connect(self._qtactor_step)
-            self._qtactor_timer.start()
+        # do first step
+        self._qtactor_step()
+
+    def event(self, event):
+        if event.type() == self._qtactor_step_event:
+            event.accept()
+            self._qtactor_step()
+            return True
+        if event.type() == self._qtactor_stop_event:
+            event.accept()
+            self._qtactor_stop()
+            return True
+        return super(QtActorMixin, self).event(event)
 
     def _qtactor_step(self):
         try:
             self._qtactor_main_gen.next()
         except StopIteration:
-            self._qtactor_timer.stop()
+            self._qtactor_main_gen = None
+            return
+        # trigger next iteration, at lower priority than other Qt events
+        QtCore.QCoreApplication.postEvent(
+            self, QtCore.QEvent(self._qtactor_step_event), -sys.maxint)
 
     def _qtactor_main(self):
-        self._qtactor_stopped.clear()
         self.process_start()
         self.process()
         try:
             for i in self.gen_process():
-                if self._qtactor_kill.is_set():
-                    self.onStop()
-                    break
                 yield 1
         except AttributeError:
             pass
-        self._qtactor_stopped.set()
 
-    def stop(self):
-        self._qtactor_kill.set()
-        self._qtactor_stopped.wait()
+    def _qtactor_stop(self):
+        if self._qtactor_main_gen:
+            self._qtactor_main_gen.close()
+            self._qtactor_main_gen = None
+            self.onStop()
         if self._qtactor_thread:
             self._qtactor_thread.quit()
+
+    def stop(self):
+        QtCore.QCoreApplication.postEvent(
+            self, QtCore.QEvent(self._qtactor_stop_event))
 
     def join(self):
         if self._qtactor_thread:
