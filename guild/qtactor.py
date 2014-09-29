@@ -3,7 +3,7 @@ import threading
 
 from PyQt4 import QtCore, QtGui
 
-from actor import ActorMixin, ActorMetaclass
+from actor import ActorMixin, ActorMetaclass, actor_method
 
 class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
     pass
