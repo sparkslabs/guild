@@ -96,12 +96,8 @@ class QtActorMixin(ActorMixin):
             self._qtactor_thread.wait()
 
 
-class ActorSignal(QtCore.QObject, QtActorMixin):
+class ActorSignal(QtActorMixin, QtCore.QObject):
     signal = QtCore.pyqtSignal(object)
-
-    def __init__(self):
-        super(ActorSignal, self).__init__()
-        QtActorMixin.__init__(self)
 
     @actor_method
     def input(self, msg):
