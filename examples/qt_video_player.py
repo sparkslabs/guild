@@ -103,6 +103,7 @@ class PlayerQt(QtActorMixin, QtCore.QObject):
             time.sleep(1.0/25)
 
     @actor_method
+    @QtCore.pyqtSlot(bool)
     def set_paused(self, paused):
         self.paused = paused
 
@@ -157,7 +158,7 @@ class MainWindow(QtGui.QMainWindow):
         grid.addWidget(display, 0, 0, 1, 6)
         # pause button
         pause_button = QtGui.QCheckBox('pause')
-        pause_button.clicked.connect(self.pause)
+        pause_button.clicked.connect(self.player.set_paused)
         pause_button.setShortcut('Space')
         grid.addWidget(pause_button, 1, 0)
         # quit button
@@ -166,9 +167,6 @@ class MainWindow(QtGui.QMainWindow):
         quit_button.setShortcut('Ctrl+Q')
         grid.addWidget(quit_button, 1, 5)
         self.show()
-
-    def pause(self, state):
-        self.player.set_paused(state)
 
     def shutdown(self):
         stop(*self.actors)
