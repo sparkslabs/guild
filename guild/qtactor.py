@@ -30,18 +30,12 @@ class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
 
 class QtActorMixin(ActorMixin):
     __metaclass__ = _QtActorMixinMetaclass
+    # create unique event types
+    _qtactor_step_event = QtCore.QEvent.registerEventType()
+    _qtactor_stop_event = QtCore.QEvent.registerEventType()
 
     def __init__(self, *argv, **argd):
         super(QtActorMixin, self).__init__(*argv, **argd)
-        self._qtactor_main_gen = None
-        # create unique event types
-        self._qtactor_step_event = QtCore.QEvent.registerEventType()
-        self._qtactor_stop_event = QtCore.QEvent.registerEventType()
-        # set up QSocketNotifier to handle queued method notifications
-        self._qtactor_rsock, self._qtactor_wsock = socket.socketpair()
-        self._qtactor_notifier = QtCore.QSocketNotifier(
-            self._qtactor_rsock.fileno(), QtCore.QSocketNotifier.Read)
-        self._qtactor_notifier.activated.connect(self._qtactor_do_queued)
         # if not a Widget, move to a Qt thread
         if isinstance(self, QtGui.QWidget):
             # widgets can't be moved to another thread
@@ -72,6 +66,11 @@ class QtActorMixin(ActorMixin):
         self._qtactor_main_gen = self._qtactor_main()
         # do first step
         self._qtactor_step()
+        # set up QSocketNotifier to handle queued method notifications
+        self._qtactor_rsock, self._qtactor_wsock = socket.socketpair()
+        self._qtactor_notifier = QtCore.QSocketNotifier(
+            self._qtactor_rsock.fileno(), QtCore.QSocketNotifier.Read)
+        self._qtactor_notifier.activated.connect(self._qtactor_do_queued)
 
     def event(self, event):
         if event.type() == self._qtactor_step_event:
