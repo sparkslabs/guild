@@ -108,6 +108,8 @@ class QtActorMixin(ActorMixin):
             QtCore.Qt.HighEventPriority)
 
     def join(self):
+        while QtCore.QCoreApplication.hasPendingEvents():
+            QtCore.QCoreApplication.processEvents()
         if self._qtactor_thread:
             self._qtactor_thread.wait()
 
