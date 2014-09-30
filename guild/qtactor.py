@@ -17,9 +17,6 @@ a Qt thread.
 
 """
 
-import socket
-import sys
-
 from PyQt4 import QtCore, QtGui
 
 from actor import ActorMixin, ActorMetaclass, actor_method
@@ -31,11 +28,17 @@ class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
 class QtActorMixin(ActorMixin):
     __metaclass__ = _QtActorMixinMetaclass
     # create unique event types
-    _qtactor_step_event = QtCore.QEvent.registerEventType()
-    _qtactor_stop_event = QtCore.QEvent.registerEventType()
+    _qtactor_queue_event = QtCore.QEvent.registerEventType()
+    _qtactor_step_event  = QtCore.QEvent.registerEventType()
+    _qtactor_stop_event  = QtCore.QEvent.registerEventType()
 
     def __init__(self, *argv, **argd):
         super(QtActorMixin, self).__init__(*argv, **argd)
+        self._qtactor_dispatch = {
+            self._qtactor_queue_event : self._actor_do_queued,
+            self._qtactor_step_event  : self._qtactor_step,
+            self._qtactor_stop_event  : self._qtactor_stop,
+            }
         # if not a Widget, move to a Qt thread
         if isinstance(self, QtGui.QWidget):
             # widgets can't be moved to another thread
@@ -48,12 +51,9 @@ class QtActorMixin(ActorMixin):
 
     def _actor_notify(self):
         # run from any thread that needs to wake up our thread
-        self._qtactor_wsock.send('1')
-
-    def _qtactor_do_queued(self):
-        # runs in Qt thread after it's been woken up by QSocketNotifier
-        self._qtactor_rsock.recv(1)
-        self._actor_do_queued()
+        QtCore.QCoreApplication.postEvent(
+            self, QtCore.QEvent(self._qtactor_queue_event),
+            QtCore.Qt.LowEventPriority)
 
     def start(self):
         if self._qtactor_thread:
@@ -66,20 +66,12 @@ class QtActorMixin(ActorMixin):
         self._qtactor_main_gen = self._qtactor_main()
         # do first step
         self._qtactor_step()
-        # set up QSocketNotifier to handle queued method notifications
-        self._qtactor_rsock, self._qtactor_wsock = socket.socketpair()
-        self._qtactor_notifier = QtCore.QSocketNotifier(
-            self._qtactor_rsock.fileno(), QtCore.QSocketNotifier.Read)
-        self._qtactor_notifier.activated.connect(self._qtactor_do_queued)
 
     def event(self, event):
-        if event.type() == self._qtactor_step_event:
+        event_type = event.type()
+        if event_type in self._qtactor_dispatch:
             event.accept()
-            self._qtactor_step()
-            return True
-        if event.type() == self._qtactor_stop_event:
-            event.accept()
-            self._qtactor_stop()
+            self._qtactor_dispatch[event_type]()
             return True
         return super(QtActorMixin, self).event(event)
 
@@ -91,7 +83,8 @@ class QtActorMixin(ActorMixin):
             return
         # trigger next iteration, at lower priority than other Qt events
         QtCore.QCoreApplication.postEvent(
-            self, QtCore.QEvent(self._qtactor_step_event), -sys.maxint)
+            self, QtCore.QEvent(self._qtactor_step_event),
+            QtCore.Qt.LowEventPriority - 1)
 
     def _qtactor_main(self):
         self.process_start()
@@ -104,15 +97,16 @@ class QtActorMixin(ActorMixin):
 
     def _qtactor_stop(self):
         if self._qtactor_main_gen:
+            self._qtactor_dispatch = {}
             self._qtactor_main_gen.close()
-            self._qtactor_main_gen = None
             self.onStop()
         if self._qtactor_thread:
             self._qtactor_thread.quit()
 
     def stop(self):
         QtCore.QCoreApplication.postEvent(
-            self, QtCore.QEvent(self._qtactor_stop_event))
+            self, QtCore.QEvent(self._qtactor_stop_event),
+            QtCore.Qt.HighEventPriority)
 
     def join(self):
         if self._qtactor_thread:
