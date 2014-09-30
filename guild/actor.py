@@ -131,11 +131,11 @@ class ActorMixin(object):
     """
     __metaclass__ = ActorMetaclass
 
-    def __init__(self):
+    def __init__(self, *argv, **argd):
         self.inbound = _Queue.Queue()
         self.F_inbound = _Queue.Queue()
         self.core = _Queue.Queue()
-        super(ActorMixin, self).__init__()
+        super(ActorMixin, self).__init__(*argv, **argd)
 
     def interpret(self, command):
         # print command
