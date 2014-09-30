@@ -49,12 +49,6 @@ class QtActorMixin(ActorMixin):
             self.moveToThread(self._qtactor_thread)
             self._qtactor_thread.started.connect(self._qtactor_run)
 
-    def _actor_notify(self):
-        # run from any thread that needs to wake up our thread
-        QtCore.QCoreApplication.postEvent(
-            self, QtCore.QEvent(self._qtactor_queue_event),
-            QtCore.Qt.LowEventPriority)
-
     def start(self):
         if self._qtactor_thread:
             self._qtactor_thread.start()
@@ -67,13 +61,14 @@ class QtActorMixin(ActorMixin):
         # do first step
         self._qtactor_step()
 
-    def event(self, event):
-        event_type = event.type()
-        if event_type in self._qtactor_dispatch:
-            event.accept()
-            self._qtactor_dispatch[event_type]()
-            return True
-        return super(QtActorMixin, self).event(event)
+    def _qtactor_main(self):
+        self.process_start()
+        self.process()
+        try:
+            for i in self.gen_process():
+                yield 1
+        except AttributeError:
+            pass
 
     def _qtactor_step(self):
         try:
@@ -86,22 +81,26 @@ class QtActorMixin(ActorMixin):
             self, QtCore.QEvent(self._qtactor_step_event),
             QtCore.Qt.LowEventPriority - 1)
 
-    def _qtactor_main(self):
-        self.process_start()
-        self.process()
-        try:
-            for i in self.gen_process():
-                yield 1
-        except AttributeError:
-            pass
-
     def _qtactor_stop(self):
+        self._qtactor_dispatch = {}
         if self._qtactor_main_gen:
-            self._qtactor_dispatch = {}
             self._qtactor_main_gen.close()
             self.onStop()
         if self._qtactor_thread:
             self._qtactor_thread.quit()
+
+    def _actor_notify(self):
+        QtCore.QCoreApplication.postEvent(
+            self, QtCore.QEvent(self._qtactor_queue_event),
+            QtCore.Qt.LowEventPriority)
+
+    def event(self, event):
+        event_type = event.type()
+        if event_type in self._qtactor_dispatch:
+            event.accept()
+            self._qtactor_dispatch[event_type]()
+            return True
+        return super(QtActorMixin, self).event(event)
 
     def stop(self):
         QtCore.QCoreApplication.postEvent(
