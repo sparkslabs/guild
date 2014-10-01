@@ -17,16 +17,18 @@ a Qt thread.
 
 """
 
+import six
+
 from PyQt4 import QtCore, QtGui
 
-from actor import ActorMixin, ActorMetaclass, actor_method
+from .actor import ActorMixin, ActorMetaclass, actor_method
 
 class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
     pass
 
 
+@six.add_metaclass(_QtActorMixinMetaclass)
 class QtActorMixin(ActorMixin):
-    __metaclass__ = _QtActorMixinMetaclass
     # create unique event types
     _qtactor_queue_event = QtCore.QEvent.registerEventType()
     _qtactor_step_event  = QtCore.QEvent.registerEventType()

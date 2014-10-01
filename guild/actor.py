@@ -5,8 +5,12 @@
 # from actor import *
 #
 
-import Queue as _Queue
+import six
 import sys
+if sys.version_info[0] >= 3:
+    import queue as _Queue
+else:
+    import Queue as _Queue
 from threading import Thread as _Thread
 import time
 
@@ -52,8 +56,11 @@ class ActorMetaclass(type):
                             self.F_inbound.put_nowait((op, resultQueue))
                             self._actor_notify()
                             e, result = resultQueue.get(True, None)
-                            if e != 0:
-                                raise e.__class__, e, e.sys_exc_info
+                            if e:
+                                if sys.version_info[0] >= 3:
+                                    raise e
+                                else:
+                                    raise(e.__class__, e, e.sys_exc_info)
                             return result
                         return t
 
@@ -122,6 +129,7 @@ def late_bind_safe(method):
     return ("LATEBINDSAFE", method)
 
 
+@six.add_metaclass(ActorMetaclass)
 class ActorMixin(object):
     """Actor mixin base class.
 
@@ -129,7 +137,6 @@ class ActorMixin(object):
     scheduler of some kind to create a complete actor base class.
 
     """
-    __metaclass__ = ActorMetaclass
 
     def __init__(self, *argv, **argd):
         self.inbound = _Queue.Queue()
@@ -221,7 +228,8 @@ class ActorMixin(object):
                 result = self.interpret(command)
             except Exception as e:
                 result_fail = e
-                result_fail.sys_exc_info = sys.exc_info()[2]
+                if sys.version_info[0] < 3:
+                    result_fail.sys_exc_info = sys.exc_info()[2]
 
             result_queue.put_nowait((result_fail, result))
 
@@ -246,7 +254,7 @@ class Actor(ActorMixin, _Thread):
 
         while True:
             try:
-                self._uThread.next()
+                next(self._uThread)
             except StopIteration:
                 break
             if self.killflag:
@@ -274,7 +282,7 @@ class Actor(ActorMixin, _Thread):
         self._g = g
         while True:
             if g != None:
-                g.next()
+                next(g)
             yield 1
             if not self._actor_do_queued():
                 if g == None:

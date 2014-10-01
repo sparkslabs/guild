@@ -19,6 +19,8 @@
 # limitations under the License.
 # -------------------------------------------------------------------------
 
+from __future__ import print_function
+
 """
 ===
 STM
@@ -87,7 +89,7 @@ or updated as a group, see the next section::
 
     S = Store()
     greeting = S.usevar("hello")
-    print repr(greeting.value)
+    print(repr(greeting.value))
     greeting.set("Hello World")
     greeting.commit()
 
@@ -454,22 +456,22 @@ class STMCheckout(object):
     @contextmanager
     def changeset(self, *args, **argd):
         autocheckin = argd.get("autocheckin", True)
-        # print "WOMBAT", args, self.store
+        # print("WOMBAT", args, self.store)
         D = self.store.using(*args)
         self.num_tries += 1
         try:
             yield D
             if autocheckin:
                 D.commit()
-                # print "TRANSACTION SUCCEEDED after", self.num_tries, "tries"
+                # print("TRANSACTION SUCCEEDED after", self.num_tries, "tries")
             self.notcheckedin = False
-        except ConcurrentUpdate, f:
+        except ConcurrentUpdate as f:
             if self.max_tries:
                 if self.max_tries == self.num_tries:
-                    # print "TRANSACTION FAILED", self.num_tries
+                    # print("TRANSACTION FAILED", self.num_tries)
                     raise MAXFAIL(f)
-            #print "TRANSACTION FAILED, need to retry", self.num_tries
-        #print "TABMOW", args
+            #print("TRANSACTION FAILED, need to retry", self.num_tries)
+        #print("TABMOW", args)
 
 
 if __name__ == "__main__":

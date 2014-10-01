@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import time
 import sys
 import guild
@@ -105,7 +107,7 @@ class Printer(Actor):
 
     @late_bind_safe
     def output(self, line):
-        print "unbound, odd,", line
+        print("unbound, odd,", line)
 
 
 if __name__ == "__main__":
@@ -128,7 +130,7 @@ if __name__ == "__main__":
     class consumer(Actor):
         @actor_method
         def consume(self, what):
-            print "Look what we go ma!", what, self
+            print("Look what we go ma!", what, self)
 
     p = producer()
     c = consumer()
