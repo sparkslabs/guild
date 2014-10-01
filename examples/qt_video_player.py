@@ -12,6 +12,8 @@ modify either.
 
 """
 
+from __future__ import print_function
+
 import re
 import subprocess
 import sys
@@ -28,13 +30,13 @@ def VideoFileReader(file_name):
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
     stdout, stderr = proc_pipe.communicate()
     pattern = re.compile('Stream.*Video.* ([0-9]{2,})x([0-9]+)')
-    for line in stderr.split('\n'):
+    for line in str(stderr).split('\n'):
         match = pattern.search(line)
         if match:
             xlen, ylen = map(int, match.groups())
             break
     else:
-        print 'Could not get video dimensions of', file_name
+        print('Could not get video dimensions of', file_name)
         return
     try:
         bytes_per_frame = xlen * ylen * 3
@@ -64,7 +66,7 @@ class Player(Actor):
             yield 1
             if not (self.paused and raw_image):
                 try:
-                    xlen, ylen, raw_image = self.reader.next()
+                    xlen, ylen, raw_image = next(self.reader)
                 except StopIteration:
                     break
             image = QtGui.QImage(
@@ -94,7 +96,7 @@ class PlayerQt(QtActorMixin, QtCore.QObject):
             yield 1
             if not (self.paused and raw_image):
                 try:
-                    xlen, ylen, raw_image = self.reader.next()
+                    xlen, ylen, raw_image = next(self.reader)
                 except StopIteration:
                     break
             image = QtGui.QImage(
@@ -174,7 +176,7 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QApplication.instance().quit()
 
 if len(sys.argv) != 2:
-    print 'usage: %s video_file' % sys.argv[0]
+    print('usage: %s video_file' % sys.argv[0])
     sys.exit(1)
 app = QtGui.QApplication([])
 main = MainWindow(sys.argv[1])

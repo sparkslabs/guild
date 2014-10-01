@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import time
 from guild.actor import *
 
@@ -7,7 +9,7 @@ from guild.actor import *
 class Woofie(Actor):
     @actor_method
     def bark(self):
-        print "woof"
+        print("woof")
 
     @actor_function
     def name(self):
@@ -19,7 +21,7 @@ woofie.start()
 
 time.sleep(0.01)     # Give woofie a chance
 name = woofie.name()
-print "NAME", name
+print("NAME", name)
 woofie.bark()
 woofie.stop()
 woofie.join()
