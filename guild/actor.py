@@ -6,12 +6,10 @@
 #
 
 from functools import wraps as _wraps
+import logging
 import six
+from six.moves import queue as _Queue
 import sys
-if sys.version_info[0] >= 3:
-    import queue as _Queue
-else:
-    import Queue as _Queue
 from threading import Thread as _Thread
 import time
 
@@ -60,10 +58,7 @@ class ActorMetaclass(type):
                             self._actor_notify()
                             e, result = resultQueue.get(True, None)
                             if e:
-                                if sys.version_info[0] >= 3:
-                                    raise e
-                                else:
-                                    raise(e.__class__, e, e.sys_exc_info)
+                                six.reraise(*e)
                             return result
                         return t
 
@@ -148,6 +143,8 @@ class ActorMixin(object):
         self.inbound = _Queue.Queue()
         self.F_inbound = _Queue.Queue()
         self.core = _Queue.Queue()
+        self._actor_logger = logging.getLogger(
+            '%s.%s' % (self.__module__, self.__class__.__name__))
         super(ActorMixin, self).__init__(*argv, **argd)
 
     def interpret(self, command):
@@ -224,24 +221,27 @@ class ActorMixin(object):
             command = self.inbound.get_nowait()
             try:
                 self.interpret(command)
-            except:
+            except Exception as e:
+                self._actor_logger.exception(e)
                 self.stop()
 
         if self.F_inbound.qsize() > 0:
             command, result_queue = self.F_inbound.get_nowait()
+            result = None
             result_fail = 0
             try:
                 result = self.interpret(command)
-            except Exception as e:
-                result_fail = e
-                if sys.version_info[0] < 3:
-                    result_fail.sys_exc_info = sys.exc_info()[2]
+            except Exception:
+                result_fail = sys.exc_info()
 
             result_queue.put_nowait((result_fail, result))
 
         if self.core.qsize() > 0:
             command = self.core.get_nowait()
-            self.interpret(command)
+            try:
+                self.interpret(command)
+            except Exception as e:
+                self._actor_logger.exception(e)
 
         return True
 
