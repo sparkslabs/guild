@@ -56,35 +56,32 @@ class QtActorMixin(ActorMixin):
             self._qtactor_run()
 
     def _qtactor_run(self):
-        # get main process generator
-        self._qtactor_main_gen = self._qtactor_main()
-        # do first step
-        self._qtactor_step()
-
-    def _qtactor_main(self):
         self.process_start()
         self.process()
+        # get gen_process generator
         try:
-            for i in self.gen_process():
-                yield 1
+            self._qtactor_gen = self.gen_process()
         except AttributeError:
-            pass
+            self._qtactor_gen = None
+        # do first step
+        if self._qtactor_gen:
+            self._qtactor_step()
 
     def _qtactor_step(self):
         try:
-            self._qtactor_main_gen.next()
+            self._qtactor_gen.next()
         except StopIteration:
-            self._qtactor_main_gen = None
+            self._qtactor_gen = None
             return
-        # trigger next iteration, at lower priority than other Qt events
+        # trigger next step
         QtCore.QCoreApplication.postEvent(
             self, QtCore.QEvent(self._qtactor_step_event),
-            QtCore.Qt.LowEventPriority - 1)
+            QtCore.Qt.LowEventPriority)
 
     def _qtactor_stop(self):
         self._qtactor_dispatch = {}
-        if self._qtactor_main_gen:
-            self._qtactor_main_gen.close()
+        if self._qtactor_gen:
+            self._qtactor_gen.close()
             self.onStop()
         if self._qtactor_thread:
             self._qtactor_thread.quit()
@@ -108,8 +105,6 @@ class QtActorMixin(ActorMixin):
             QtCore.Qt.HighEventPriority)
 
     def join(self):
-        while QtCore.QCoreApplication.hasPendingEvents():
-            QtCore.QCoreApplication.processEvents()
         if self._qtactor_thread:
             self._qtactor_thread.wait()
 
