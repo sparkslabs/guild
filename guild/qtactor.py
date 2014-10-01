@@ -82,7 +82,7 @@ class QtActorMixin(ActorMixin):
         self._qtactor_dispatch = {}
         if self._qtactor_gen:
             self._qtactor_gen.close()
-            self.onStop()
+        self.onStop()
         if self._qtactor_thread:
             self._qtactor_thread.quit()
 
