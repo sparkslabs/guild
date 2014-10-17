@@ -41,6 +41,7 @@ class QtActorMixin(ActorMixin):
             self._qtactor_step_event  : self._qtactor_step,
             self._qtactor_stop_event  : self._qtactor_stop,
             }
+        self._qtactor_gen = None
         # if not a Widget, move to a Qt thread
         if isinstance(self, QtGui.QWidget):
             # widgets can't be moved to another thread
