@@ -252,47 +252,24 @@ class Actor(ActorMixin, _Thread):
     def __init__(self):
         self.killflag = False
         super(Actor, self).__init__()
-        self._uThread = None
-        self._g = None
 
     def run(self):
-        self._uThread = self.main()
-
-        while True:
-            try:
-                next(self._uThread)
-            except StopIteration:
-                break
-            if self.killflag:
-                self.onStop()
-                dobreak = False
-                try:
-                    self._uThread.throw(StopIteration)
-                except StopIteration:
-                    dobreak = True
-                try:
-                    if self._g:
-                        self._g.throw(StopIteration)
-                except StopIteration:
-                    dobreak = True
-                if dobreak:
-                    break
-
-    def main(self):
         self.process_start()
         self.process()
         try:
             g = self.gen_process()
-        except:
+        except AttributeError:
             g = None
-        self._g = g
-        while True:
-            if g != None:
-                next(g)
-            yield 1
+        while not self.killflag:
+            if g:
+                try:
+                    next(g)
+                except StopIteration:
+                    g = None
             if not self._actor_do_queued():
-                if g == None:
+                if g is None:
                     time.sleep(0.01)
+        self.onStop()
 
     def stop(self):
         self.killflag = True
