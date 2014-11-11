@@ -5,6 +5,7 @@
 # from actor import *
 #
 
+from collections import deque as _deque
 from functools import wraps as _wraps
 import logging
 import six
@@ -41,7 +42,7 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
-                            self.inbound.put_nowait((func, self, args, argd))
+                            self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
 
@@ -54,7 +55,7 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
-                            self.F_inbound.put_nowait((op, resultQueue))
+                            self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
                             e, result = resultQueue.get(True, None)
                             if e:
@@ -71,7 +72,7 @@ class ActorMetaclass(type):
                             x = func(self)
                             if x == False:
                                 return
-                            self.core.put_nowait((s, self, (), {}))
+                            self.core.append((s, self, (), {}))
                         return s
 
                     new_dct[name] = mkcallback(fn)
@@ -89,7 +90,7 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
-                            self.inbound.put_nowait((func, self, args, argd))
+                            self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
 
@@ -140,9 +141,9 @@ class ActorMixin(object):
     """
 
     def __init__(self, *argv, **argd):
-        self.inbound = _Queue.Queue()
-        self.F_inbound = _Queue.Queue()
-        self.core = _Queue.Queue()
+        self.inbound = _deque()
+        self.F_inbound = _deque()
+        self.core = _deque()
         self._actor_logger = logging.getLogger(
             '%s.%s' % (self.__module__, self.__class__.__name__))
         super(ActorMixin, self).__init__(*argv, **argd)
@@ -212,21 +213,19 @@ class ActorMixin(object):
         It returns False if there was nothing to do.
 
         """
-        if (self.F_inbound.qsize() <= 0 and
-            self.inbound.qsize() <= 0 and
-            self.core.qsize() <= 0):
+        if not (self.F_inbound or self.inbound or self.core):
             return False
 
-        if self.inbound.qsize() > 0:
-            command = self.inbound.get_nowait()
+        if self.inbound:
+            command = self.inbound.popleft()
             try:
                 self.interpret(command)
             except Exception as e:
                 self._actor_logger.exception(e)
                 self.stop()
 
-        if self.F_inbound.qsize() > 0:
-            command, result_queue = self.F_inbound.get_nowait()
+        if self.F_inbound:
+            command, result_queue = self.F_inbound.popleft()
             result = None
             result_fail = 0
             try:
@@ -236,8 +235,8 @@ class ActorMixin(object):
 
             result_queue.put_nowait((result_fail, result))
 
-        if self.core.qsize() > 0:
-            command = self.core.get_nowait()
+        if self.core:
+            command = self.core.popleft()
             try:
                 self.interpret(command)
             except Exception as e:
