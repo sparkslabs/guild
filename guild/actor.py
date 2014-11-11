@@ -270,6 +270,11 @@ class Actor(ActorMixin, _Thread):
                 if g is None:
                     time.sleep(0.01)
         self.onStop()
+        if g:
+            try:
+                g.throw(StopIteration)
+            except StopIteration:
+                pass
 
     def stop(self):
         self.killflag = True
