@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 
 from guild.actor import Actor, actor_method, process_method, late_bind
 
@@ -8,11 +9,11 @@ class Dog(Actor):
 
     @actor_method    # Input - triggered by data coming in
     def woof(self):
-        print "Woof", self
+        print("Woof", self)
 
     @process_method  # Process - triggered each time it's run
     def process(self):
-        #print " ",
+        #print(" ", end="")
         pass
 
     @late_bind       # Output
@@ -28,7 +29,7 @@ class Shitzu(Dog):
     @process_method
     def process(self):
         self.count += 1
-        print "I don't go meow", self.count
+        print("I don't go meow", self.count)
         if self.count >= 20:
             self.stop()
             return False

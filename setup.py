@@ -47,5 +47,5 @@ setup(name = "python-guild",
       long_description = """
 This is initially just a collection of random test ideas. It may grow into
 something more interesting.  It may not.
-"""
+""",
       )

@@ -5,12 +5,17 @@
 # from actor import *
 #
 
-import Queue as _Queue
+from collections import deque as _deque
+from functools import wraps as _wraps
+import logging
+import six
+from six.moves import queue as _Queue
 import sys
 from threading import Thread as _Thread
 import time
 
-__all__ = ["Actor", "actor_method", "actor_function", "process_method",
+__all__ = ["Actor", "ActorMixin", "ActorMetaclass",
+           "actor_method", "actor_function", "process_method",
            "late_bind", "UnboundActorMethod", "ActorException",
            "late_bind_safe", "pipe", "wait_for", "stop", "pipeline",
            "wait_KeyboardInterrupt", "start"]
@@ -35,8 +40,10 @@ class ActorMetaclass(type):
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
-                            self.inbound.put_nowait((func, self, args, argd))
+                            self.inbound.append((func, self, args, argd))
+                            self._actor_notify()
                         return t
 
                     new_dct[name] = mkcallback(fn)
@@ -45,12 +52,14 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         resultQueue = _Queue.Queue()
 
+                        @_wraps(func)
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
-                            self.F_inbound.put_nowait((op, resultQueue))
+                            self.F_inbound.append((op, resultQueue))
+                            self._actor_notify()
                             e, result = resultQueue.get(True, None)
-                            if e != 0:
-                                raise e.__class__, e, e.sys_exc_info
+                            if e:
+                                six.reraise(*e)
                             return result
                         return t
 
@@ -58,17 +67,19 @@ class ActorMetaclass(type):
 
                 elif tag.startswith("PROCESSMETHOD"):
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             x = func(self)
                             if x == False:
                                 return
-                            self.core.put_nowait((s, self, (), {}))
+                            self.core.append((s, self, (), {}))
                         return s
 
                     new_dct[name] = mkcallback(fn)
 
                 elif tag == "LATEBIND":
                     def mkcallback(func):
+                        @_wraps(func)
                         def s(self, *args, **argd):
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
@@ -77,8 +88,10 @@ class ActorMetaclass(type):
                 elif tag == "LATEBINDSAFE":
                     # print "latebindsafe", name, clsname
                     def mkcallback(func):
+                        @_wraps(func)
                         def t(self, *args, **argd):
-                            self.inbound.put_nowait((func, self, args, argd))
+                            self.inbound.append((func, self, args, argd))
+                            self._actor_notify()
                         return t
 
                     new_dct[name] = mkcallback(fn)
@@ -118,41 +131,22 @@ def late_bind_safe(method):
     return ("LATEBINDSAFE", method)
 
 
-class Actor(_Thread):
-    __metaclass__ = ActorMetaclass
-    daemon = True
+@six.add_metaclass(ActorMetaclass)
+class ActorMixin(object):
+    """Actor mixin base class.
 
-    def __init__(self):
-        self.inbound = _Queue.Queue()
-        self.F_inbound = _Queue.Queue()
-        self.core = _Queue.Queue()
-        self.killflag = False
-        super(Actor, self).__init__()
-        self._uThread = None
-        self._g = None
+    Provides partial implementation of a guild actor. Use with a
+    scheduler of some kind to create a complete actor base class.
 
-    def run(self):
-        self._uThread = self.main()
+    """
 
-        while True:
-            try:
-                self._uThread.next()
-            except StopIteration:
-                break
-            if self.killflag:
-                self.onStop()
-                dobreak = False
-                try:
-                    self._uThread.throw(StopIteration)
-                except StopIteration:
-                    dobreak = True
-                try:
-                    if self._g:
-                        self._g.throw(StopIteration)
-                except StopIteration:
-                    dobreak = True
-                if dobreak:
-                    break
+    def __init__(self, *argv, **argd):
+        self.inbound = _deque()
+        self.F_inbound = _deque()
+        self.core = _deque()
+        self._actor_logger = logging.getLogger(
+            '%s.%s' % (self.__module__, self.__class__.__name__))
+        super(ActorMixin, self).__init__(*argv, **argd)
 
     def interpret(self, command):
         # print command
@@ -180,53 +174,9 @@ class Actor(_Thread):
     def onStop(self):
         pass
 
-    def main(self):
-        self.process_start()
-        self.process()
-        try:
-            g = self.gen_process()
-        except:
-            g = None
-        self._g = g
-        while True:
-            if g != None:
-                g.next()
-            yield 1
-            if (self.F_inbound.qsize() > 0 or
-                self.inbound.qsize() > 0 or
-                self.core.qsize() > 0):
-
-                if self.inbound.qsize() > 0:
-                    command = self.inbound.get_nowait()
-                    try:
-                        self.interpret(command)
-                    except:
-                        self.stop()
-
-                if self.F_inbound.qsize() > 0:
-                    command, result_queue = self.F_inbound.get_nowait()
-                    result_fail = 0
-                    try:
-                        result = self.interpret(command)
-                    except Exception as e:
-                        result_fail = e
-                        result_fail.sys_exc_info = sys.exc_info()[2]
-
-                    result_queue.put_nowait((result_fail, result))
-
-                if self.core.qsize() > 0:
-                    command = self.core.get_nowait()
-                    self.interpret(command)
-            else:
-                if g == None:
-                    time.sleep(0.01)
-
     @process_method
     def process(self):
         return False
-
-    def stop(self):
-        self.killflag = True
 
     @actor_method
     def bind(self, source, dest, destmeth):
@@ -243,6 +193,90 @@ class Actor(_Thread):
     @actor_method
     def input(self, *argv, **argd):
         pass
+
+    def _actor_notify(self):
+        """Alert scheduler to queued method invocation.
+
+        If your scheduler is event driven then over-ride this method
+        to trigger the scheduler (in a thread safe manner) to run
+        _actor_do_queued.
+
+        """
+        pass
+
+    def _actor_do_queued(self):
+        """Do queued method invocation.
+
+        The scheduler needs to call this method whenever there are
+        queued method invocations, or poll it at frequent intervals.
+
+        It returns False if there was nothing to do.
+
+        """
+        if not (self.F_inbound or self.inbound or self.core):
+            return False
+
+        if self.inbound:
+            command = self.inbound.popleft()
+            try:
+                self.interpret(command)
+            except Exception as e:
+                self._actor_logger.exception(e)
+                self.stop()
+
+        if self.F_inbound:
+            command, result_queue = self.F_inbound.popleft()
+            result = None
+            result_fail = 0
+            try:
+                result = self.interpret(command)
+            except Exception:
+                result_fail = sys.exc_info()
+
+            result_queue.put_nowait((result_fail, result))
+
+        if self.core:
+            command = self.core.popleft()
+            try:
+                self.interpret(command)
+            except Exception as e:
+                self._actor_logger.exception(e)
+
+        return True
+
+
+class Actor(ActorMixin, _Thread):
+    daemon = True
+
+    def __init__(self):
+        self.killflag = False
+        super(Actor, self).__init__()
+
+    def run(self):
+        self.process_start()
+        self.process()
+        try:
+            g = self.gen_process()
+        except AttributeError:
+            g = None
+        while not self.killflag:
+            if g:
+                try:
+                    next(g)
+                except StopIteration:
+                    g = None
+            if not self._actor_do_queued():
+                if g is None:
+                    time.sleep(0.01)
+        self.onStop()
+        if g:
+            try:
+                g.throw(StopIteration)
+            except StopIteration:
+                pass
+
+    def stop(self):
+        self.killflag = True
 
 
 def pipe(source, source_box, sink, sinkbox):

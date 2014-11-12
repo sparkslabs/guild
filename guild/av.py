@@ -1,5 +1,7 @@
 #!usr/bin/python
 
+from __future__ import print_function
+
 import os
 import time
 import wave
@@ -119,7 +121,7 @@ class WebCamTest(Actor):
         camera.start()
         count = 0
         ts = time.time()
-        print "START"
+        print("START")
         while True:
             time.sleep(0.02)
             yield 1
@@ -131,10 +133,10 @@ class WebCamTest(Actor):
             except:
                 pass
             if count > 30:
-                print ts, time.time(), "Count", count,
+                print(ts, time.time(), "Count", count, end="")
                 dur = time.time() - ts
                 if dur > 0:
-                    print "RATE: ", count / (time.time() - ts)
+                    print("RATE: ", count / (time.time() - ts))
                 count = 0
                 ts = time.time()
 

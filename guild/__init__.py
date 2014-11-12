@@ -4,6 +4,7 @@
 # In particular, uses STM as the shared store, within a simple wrapper
 #
 
+from __future__ import print_function
 
 # Avoid namespace pollution
 from guild.stm import Store as _Store
@@ -26,7 +27,7 @@ def register(key, value):
             with repo.changeset(key) as c:
                 c[key].set(value)
     except _MAXFAIL as mf:
-        print "TRANSACTION COMPLETELY FAILED"
+        print("TRANSACTION COMPLETELY FAILED")
 
 
 def lookup(key):
