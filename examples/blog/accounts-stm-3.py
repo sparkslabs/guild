@@ -6,6 +6,15 @@ import time
 from guild.actor import *
 from guild.stm import Store, ConcurrentUpdate, BusyRetry
 
+import logging
+
+logger = logging.getLogger('__main__.' + "MischiefMaker")
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 
 class InsufficientFunds(ActorException):
     pass
@@ -99,6 +108,9 @@ class MischiefMaker(Actor):
             print "Awww, Tapped out", e.balance, "<", e.requested
             self.stop()
             return
+        except MaxRetriesExceeded as e:
+            print "Gotta wait a moment"
+            time.sleep(0.001)
         self.grabbed = self.grabbed + grab
 
 
