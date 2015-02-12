@@ -476,7 +476,7 @@ class STMCheckout(object):
         #print("TABMOW", args)
 
 def retry(function):
-    @wraps(function)
+    @_wraps(function)
     def as_transaction(*argv, **argd):
         succeeded = False
         while not succeeded:
