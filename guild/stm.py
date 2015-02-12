@@ -21,6 +21,14 @@
 
 from __future__ import print_function
 
+from functools import wraps as _wraps
+from contextlib import contextmanager
+
+import copy
+import threading
+
+from guild.actor import Actor
+
 """
 ===
 STM
@@ -158,12 +166,6 @@ components are implemented as generators, which makes blocking operation ( as a
 .acquire() rather than .acquire(0) would be) an expensive operation.
 """
 
-from contextlib import contextmanager
-
-import copy
-import threading
-
-from guild.actor import Actor
 
 
 class ConcurrentUpdate(Exception):
