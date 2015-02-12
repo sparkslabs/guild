@@ -1,3 +1,3 @@
-echo "Adding guildservice user"
-sudo useradd guildservice --system --no-create-home  --home-dir /nonexistent
-echo "done"
+#echo "Adding guildservice user"
+#sudo useradd guildservice --system --no-create-home  --home-dir /nonexistent
+#echo "done"

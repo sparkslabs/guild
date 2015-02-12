@@ -36,13 +36,13 @@ setup(name = "python-guild",
       license ="Apache Software License",
       packages = package_names,
       package_dir = packages,
-      scripts = [
-                  'scripts/guildservice',
-                ],
-      data_files=[
-                   ('/etc/init',         ['etc/init/guildservice.conf']),
-                   ('/etc/guildservice', ["etc/guildservice/config.json"])
-                 ],
+#      scripts = [
+#                  'scripts/guildservice',
+#                ],
+#      data_files=[
+#                   ('/etc/init',         ['etc/init/guildservice.conf']),
+#                   ('/etc/guildservice', ["etc/guildservice/config.json"])
+#                 ],
 
       long_description = """
 This is initially just a collection of random test ideas. It may grow into
