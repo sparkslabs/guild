@@ -18,6 +18,9 @@ install:
 buildrpm:
 	$(PYTHON) setup.py bdist_rpm --post-install=rpm/postinstall --pre-uninstall=rpm/preuninstall
 
+purge:
+	sudo apt-get purge $(PROJECT)
+
 deb:
 	debuild -uc -us
 
@@ -29,3 +32,5 @@ clean:
 	dh_clean
 	rm -rf build/ MANIFEST
 	find . -name '*.pyc' -delete
+
+devloop: purge clean deb use 
