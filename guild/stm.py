@@ -473,6 +473,21 @@ class STMCheckout(object):
             #print("TRANSACTION FAILED, need to retry", self.num_tries)
         #print("TABMOW", args)
 
+def retry(function):
+    @wraps(function)
+    def as_transaction(*argv, **argd):
+        succeeded = False
+        while not succeeded:
+            try:
+                result = function(*argv, **argd)
+                succeeded = True
+            except ConcurrentUpdate:
+                pass
+            except BusyRetry:
+                pass
+        return result
+    return as_transaction
+
 
 if __name__ == "__main__":
     if 0:
