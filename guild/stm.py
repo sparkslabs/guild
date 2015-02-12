@@ -27,7 +27,16 @@ from contextlib import contextmanager
 import copy
 import threading
 
-from guild.actor import Actor
+from guild.actor import Actor, ActorException
+import time
+
+class MaxRetriesExceeded(ActorException):
+    pass
+
+
+class RetryTimeoutExceeded(ActorException):
+    pass
+
 
 """
 ===
@@ -475,20 +484,36 @@ class STMCheckout(object):
             #print("TRANSACTION FAILED, need to retry", self.num_tries)
         #print("TABMOW", args)
 
-def retry(function):
-    @_wraps(function)
-    def as_transaction(*argv, **argd):
-        succeeded = False
-        while not succeeded:
-            try:
-                result = function(*argv, **argd)
-                succeeded = True
-            except ConcurrentUpdate:
-                pass
-            except BusyRetry:
-                pass
-        return result
-    return as_transaction
+def retry(max_tries=None, timeout=None):
+    if callable(max_tries):
+        return retry(None)(max_tries)
+
+    def mk_transaction(function):
+        @_wraps(function)
+        def as_transaction(*argv, **argd):
+            count = 0
+            ts = time.time()
+            succeeded = False
+            while not succeeded:
+                if max_tries is not None:
+                    if count > max_tries:
+                        raise MaxRetriesExceeded()
+                    count += 1
+                if timeout is not None:
+                    now = time.time()
+                    if now-ts > timeout:
+                        raise RetryTimeoutExceeded(now-ts , timeout)
+                try:
+                    result = function(*argv, **argd)
+                    succeeded = True
+                except ConcurrentUpdate:
+                    pass
+                except BusyRetry:
+                    pass
+            return result
+        return as_transaction
+
+    return mk_transaction
 
 
 if __name__ == "__main__":

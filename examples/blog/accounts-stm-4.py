@@ -4,51 +4,11 @@ import random
 import time
 
 from guild.actor import *
-from guild.stm import Store, ConcurrentUpdate, BusyRetry
+from guild.stm import Store, ConcurrentUpdate, BusyRetry, retry
 
 
 class InsufficientFunds(ActorException):
     pass
-
-
-class MaxRetriesExceeded(ActorException):
-    pass
-
-
-class RetryTimeoutExceeded(ActorException):
-    pass
-
-
-def retry(max_tries=None, timeout=None):
-    if callable(max_tries):
-        return retry(None)(max_tries)
-
-    def mk_transaction(function):
-        def as_transaction(*argv, **argd):
-            count = 0
-            ts = time.time()
-            succeeded = False
-            while not succeeded:
-                if max_tries is not None:
-                    if count > max_tries:
-                        raise MaxRetriesExceeded()
-                    count += 1
-                if timeout is not None:
-                    now = time.time()
-                    if now-ts > timeout:
-                        raise RetryTimeoutExceeded(now-ts , timeout)
-                try:
-                    result = function(*argv, **argd)
-                    succeeded = True
-                except ConcurrentUpdate:
-                    pass
-                except BusyRetry:
-                    pass
-            return result
-        return as_transaction
-
-    return mk_transaction
-
 
 class Account(object):
     def __init__(self, balance=10):
