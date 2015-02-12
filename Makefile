@@ -1,6 +1,6 @@
 PYTHON=`which python`
 DESTDIR=/
-PROJECT=guild
+PROJECT=python-guild
 
 all:
 	@echo "make source - Create source package"
@@ -20,6 +20,9 @@ buildrpm:
 
 deb:
 	debuild -uc -us
+
+use:
+	sudo dpkg -i ../$(PROJECT)*deb
 
 clean:
 	$(PYTHON) setup.py clean
