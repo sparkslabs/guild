@@ -17,11 +17,15 @@ import time
 __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "actor_method", "actor_function", "process_method",
            "late_bind", "UnboundActorMethod", "ActorException",
+           "ActorNotStartedException",
            "late_bind_safe", "pipe", "wait_for", "stop", "pipeline",
            "wait_KeyboardInterrupt", "start"]
 
 
 class UnboundActorMethod(Exception):
+    pass
+
+class ActorNotStartedException(Exception):
     pass
 
 
@@ -36,6 +40,35 @@ class ActorMetaclass(type):
         new_dct = {}
         for name, val in dct.items():
             new_dct[name] = val
+            if val.__class__ == tuple and len(val) == 3:
+                tag, fn, arg = str(val[0]), val[1], val[2]
+                if tag.startswith("ACTORFUNCTION"):
+                    print ""
+                    def mkcallback(func):
+                        resultQueue = _Queue.Queue()
+
+                        @_wraps(func)
+                        def t(self, __fcall_timeout=arg, *args, **argd):
+                            op = (func, self, args, argd)
+                            self.F_inbound.append((op, resultQueue))
+                            self._actor_notify()
+                            #e, result = resultQueue.get(True, None)
+                            try:
+                                e, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+                            except _Queue.Empty:
+                                # The function call timed out. This could be a problem
+                                # with the actor or it might not have been started. Check
+                                # which and raise appropriately
+                                if not self.is_alive():
+                                    raise ActorNotStartedException
+                                raise
+                            if e:
+                                six.reraise(*e)
+                            return result
+                        return t
+
+                    new_dct[name] = mkcallback(fn)
+
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
@@ -49,15 +82,26 @@ class ActorMetaclass(type):
                     new_dct[name] = mkcallback(fn)
 
                 elif tag.startswith("ACTORFUNCTION"):
+                    print ""
                     def mkcallback(func):
                         resultQueue = _Queue.Queue()
 
                         @_wraps(func)
-                        def t(self, *args, **argd):
+                        def t(self, __fcall_timeout=5, *args, **argd):
                             op = (func, self, args, argd)
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
-                            e, result = resultQueue.get(True, None)
+                            #e, result = resultQueue.get(True, None)
+                            try:
+                                e, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+                            except _Queue.Empty:
+                                # The function call timed out. This could be a problem
+                                # with the actor or it might not have been started. Check
+                                # which and raise appropriately
+                                if not self.is_alive():
+                                    raise ActorNotStartedException
+                                raise
+                                
                             if e:
                                 six.reraise(*e)
                             return result
@@ -110,14 +154,21 @@ def actor_method_lossy_queue(length):
         return ("ACTORMETHOD", length, method)
     return decorator
 
-
 def actor_method(method):
     return ("ACTORMETHOD", method)
 
+def actor_function(timeout=None):
+    # Just used as "@actor_function -- ie the common case"
+    if callable(timeout):
+        return actor_function(None)(timeout)
 
-def actor_function(fn):
-    return ("ACTORFUNCTION", fn)
+    def dec(fn):
+        return ("ACTORFUNCTION", fn, timeout)
 
+    return dec
+
+#def actor_function(fn):
+    #return ("ACTORFUNCTION", fn)
 
 def process_method(method):
     return ("PROCESSMETHOD", method)
