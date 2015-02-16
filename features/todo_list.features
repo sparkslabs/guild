@@ -1,0 +1,10 @@
+To write acceptance tests for:
+process_method
+late_bind
+late_bind_safe
+pipe
+wait_for
+stop
+pipeline
+wait_KeyboardInterrupt
+start
