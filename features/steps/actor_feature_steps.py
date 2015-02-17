@@ -5,6 +5,9 @@ from hamcrest import *
 import time
 but = when
 
+class UserDefinedException(Exception):
+    pass
+
 class SimpleActor(Actor):
     def __init__(self, a, b, c):
         super(SimpleActor, self).__init__()
@@ -30,6 +33,10 @@ class SimpleActor(Actor):
         self.a += 1
         self.b += 1
         self.c += 1
+    #
+    @actor_function(0.01)
+    def fails(self):
+        raise UserDefinedException("Failed!")
 
 @given(u'we create a SimpleActor class but use no special features')
 def step_impl(context):
@@ -40,6 +47,10 @@ def step_impl(context):
     context.klass = SimpleActor
 
 @given(u'we create a SimpleActor class with one actor method increment and actor function combine')
+def step_impl(context):
+    context.klass = SimpleActor
+
+@given(u'we create a SimpleActor class with an actor function called fails')
 def step_impl(context):
     context.klass = SimpleActor
 
@@ -62,6 +73,10 @@ def step_impl(context):
 @then(u'that combine actor function doesn\'t work')
 def step_impl(context):
     assert_that(context.value.combine, raises(ActorNotStartedException))
+
+@then(u'that fails actor function raises an exception in the caller thread')
+def step_impl(context):
+    assert_that(context.value.fails, raises(UserDefinedException))
 
 @then(u'that increment actor method doesn\'t work')
 def step_impl(context):

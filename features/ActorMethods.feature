@@ -21,9 +21,9 @@ Feature: Actor methods
     Then it can be used as normal
     But that increment actor method doesn't work
 
-  Scenario: An actor's actor methods work as expected when the actor is running
+  Scenario: An actor's actor methods run asynchronously to other threads when the actor is running
     Given we create a SimpleActor class with one actor method increment and actor function combine
     When we create an instance of that class
     When we do start it
     Then it can be used as normal
-    And that increment actor method works as expected
+    And that increment actor method works asynchronously as expected
