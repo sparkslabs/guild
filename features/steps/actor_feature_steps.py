@@ -90,7 +90,7 @@ def step_impl(context):
 def step_impl(context):
     assert_that((6,5,4), equal_to(context.value.combine()))
 
-@then(u'that increment actor method works as expected')
+@then(u'that increment actor method works asynchronously as expected')
 def step_impl(context):
     context.value.increment()
     time.sleep(0.01) # Microsleep to allow context.value.increment a chance to run
