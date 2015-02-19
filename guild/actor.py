@@ -38,6 +38,8 @@ class ActorException(Exception):
 class ActorMetaclass(type):
     def __new__(cls, clsname, bases, dct):
         new_dct = {}
+        inboxes = {}
+        outboxes = {}
         for name, val in dct.items():
             new_dct[name] = val
             if val.__class__ == tuple and len(val) == 3:
@@ -72,17 +74,16 @@ class ActorMetaclass(type):
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
+                    inboxes[fn.func_name] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
                             self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
-
                     new_dct[name] = mkcallback(fn)
 
                 elif tag.startswith("ACTORFUNCTION"):
-                    print ""
                     def mkcallback(func):
                         resultQueue = _Queue.Queue()
 
@@ -122,6 +123,7 @@ class ActorMetaclass(type):
                     new_dct[name] = mkcallback(fn)
 
                 elif tag == "LATEBIND":
+                    outboxes[fn.func_name] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def s(self, *args, **argd):
@@ -130,7 +132,7 @@ class ActorMetaclass(type):
                     new_dct[name] = mkcallback(fn)
 
                 elif tag == "LATEBINDSAFE":
-                    # print "latebindsafe", name, clsname
+                    outboxes[fn.func_name] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
@@ -140,6 +142,8 @@ class ActorMetaclass(type):
 
                     new_dct[name] = mkcallback(fn)
 
+        new_dct["Inboxes"] = inboxes
+        new_dct["Outboxes"] = outboxes
         return type.__new__(cls, clsname, bases, new_dct)
 
 
