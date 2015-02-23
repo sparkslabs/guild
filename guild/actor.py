@@ -45,12 +45,10 @@ class ActorMetaclass(type):
             if val.__class__ == tuple and len(val) == 3:
                 tag, fn, arg = str(val[0]), val[1], val[2]
                 if tag.startswith("ACTORFUNCTION"):
-                    print ""
-                    def mkcallback(func):
+                    def mkcallback(func, __fcall_timeout=arg):
                         resultQueue = _Queue.Queue()
-
                         @_wraps(func)
-                        def t(self, __fcall_timeout=arg, *args, **argd):
+                        def t(self, *args, **argd):
                             op = (func, self, args, argd)
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
@@ -69,7 +67,7 @@ class ActorMetaclass(type):
                             return result
                         return t
 
-                    new_dct[name] = mkcallback(fn)
+                    new_dct[name] = mkcallback(fn,arg)
 
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
