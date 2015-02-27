@@ -1,5 +1,5 @@
 Source: python-guild
-Maintainer: Michael Sparks <michael.sparks@bbc.co.uk>
+Maintainer: Michael Sparks <sparks.m@gmail.com>
 Section: python
 Priority: optional
 Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 7)
