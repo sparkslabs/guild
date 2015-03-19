@@ -395,3 +395,15 @@ pipelines and backplanes.
 
 If you find it useful or spot a typo, please let me know.
 
+### License
+
+Note the license of guild is the Apache 2 license. This is not compatible with
+the GPL version 2, without explicit permission. You have explicit permission
+therefore to use guild with GPLv2 projects. (via import, etc)
+
+See http://www.apache.org/licenses/GPL-compatibility.html for more details
+on license compatibility.
+
+Changes back to the project will be gratefully accepted (if appropriate) under
+Clause 5 of the apache 2 license. GPL contributions will not be accepted since that
+would require a license change for Guild itself.
