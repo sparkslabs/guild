@@ -22,14 +22,14 @@ purge:
 	sudo apt-get purge $(PROJECT)
 
 deb:
-	debuild -uc -us
+	rm -rf dist; python setup.py sdist && cd dist && py2dsc guild* && cd deb_dist && cd guild* && debuild -uc -us
 
 use:
-	sudo dpkg -i ../$(PROJECT)*deb
+	cd dist && cd deb_dist && sudo dpkg -i python-guild*deb
 
 clean:
 	$(PYTHON) setup.py clean
-	dh_clean
+	rm -rf dist
 	rm -rf build/ MANIFEST
 	find . -name '*.pyc' -delete
 

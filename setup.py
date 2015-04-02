@@ -26,9 +26,9 @@ def find_packages(path, base="" ):
 packages = find_packages(".")
 package_names = packages.keys()
 
-setup(name = "python-guild",
-      version = "1.0.0",
-      description = "python-guild",
+setup(name = "guild",
+      version = "1.0.1",
+      description = "guild",
      
       author = "Michael Sparks",
       author_email = "sparks.m@gmail.com",
