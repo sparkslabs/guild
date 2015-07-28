@@ -1,0 +1,5 @@
+This is a collection of "behave" tests.
+
+You can run them by typing "behave" in here.
+
+In a development checkout, you can also do "make test"

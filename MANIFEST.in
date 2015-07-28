@@ -1,1 +1,9 @@
-recursive-include etc *
+recursive-include examples *
+recursive-include site/src *
+recursive-include site/site *.css
+recursive-include site/templates *
+recursive-include features *
+recursive-include site *py
+
+include README.md
+include stdeb.cfg

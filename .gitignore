@@ -33,3 +33,4 @@ examples/attic/
 examples/x.log
 examples/y.log
 examples/z.log
+site/site/*html

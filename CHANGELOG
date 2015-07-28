@@ -1,0 +1,56 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+This project adheres to [Semantic Versioning](http://semver.org/), within
+reason.
+
+## [1.0.3] - 2015-07-28
+
+* Fix packaging details on PyPI and Launchpad
+
+## [1.0.2] - 2015-07-28
+
+### New
+
+* Support for exporting values from the store. The idea behind this is to
+  support read only views
+
+### Other
+
+* Pygame example. (Uses the exported values)
+* Initial version of website for Guild. Also to be used to create in-package
+  documentation
+* Explicitly allow use in GPL projects in license.
+
+## [1.0.1] - 2015-03-04
+
+Releases prior to 1.0.2 did not use this form of changelog.
+
+This release was published to pypi on 2015-03-04, and rolled up changed by
+Jim Easterbrook and Michael Sparks.  These can be summarised as:
+
+* Documentation improvemenst
+* Start to use functools in decorators
+* Capture metadata
+* Support for Qt based actors. (relates to event loops/etc) Qt Examples
+  added
+* Initial Python 3 support
+* Improved packaging (in theory)
+* Add in the retry decorator from examples into core and fixed examples to
+  pull retry in from core
+* Disable bogus guildservice
+* Basic error logging added to example
+* Added Inboxes/Outboxes to support guild.kamaelia
+* Cleanup timeout handling in actor function calls
+* First set of tests using "behave" - these may start to form formal specs
+  for guild as time moves on.
+
+## [1.0.0] - 2014-02-10
+
+Releases prior to 1.0.2 did not use this form of changelog. 
+
+In the dev log however the code was first published to github on 2014-02-10,
+and followed by fairly regular development. This initial development period
+- fleshing out details, removing bugs etc finished on 2014-04-03, so that's
+why that's listed as the release date for 1.0.0
+

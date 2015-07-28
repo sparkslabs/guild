@@ -175,6 +175,7 @@ components are implemented as generators, which makes blocking operation ( as a
 .acquire() rather than .acquire(0) would be) an expensive operation.
 """
 
+import time
 
 
 class ConcurrentUpdate(Exception):
@@ -283,6 +284,8 @@ class Store(object):
         self.store = {}                # Threadsafe
         self.lock = threading.Lock()
 
+        self.last_update = time.time() # Readonly
+
     # ////---------------------- Direct access -----------------------\\\\
     # Let's make this lock free, and force the assumption that to do
     # this the store must be locked.
@@ -371,6 +374,8 @@ class Store(object):
         if not HasBeenSet:
             raise ConcurrentUpdate
 
+        self.last_update = time.time()
+
     # \\\\----------------- Single Value Mediation ------------------////
 
     # ////----------------- Multi-Value Mediation ------------------\\\\
@@ -435,6 +440,19 @@ class Store(object):
         D = self.using(*self.names())
         return D
 
+    def export(self, names = None):
+        result = {}
+        if names == None:
+            names = self.names()
+        locked = self.lock.acquire(0)
+        for name in names:
+            value_clone = self.store[name].clone()
+            value = value_clone.value
+            result[name] = value
+        self.lock.release()
+
+        return result
+
     def dump(self):
         # Who cares really? This is a debug :-)
         print("DEBUG: Store dump ------------------------------")
@@ -474,15 +492,11 @@ class STMCheckout(object):
             yield D
             if autocheckin:
                 D.commit()
-                # print("TRANSACTION SUCCEEDED after", self.num_tries, "tries")
             self.notcheckedin = False
         except ConcurrentUpdate as f:
             if self.max_tries:
                 if self.max_tries == self.num_tries:
-                    # print("TRANSACTION FAILED", self.num_tries)
                     raise MAXFAIL(f)
-            #print("TRANSACTION FAILED, need to retry", self.num_tries)
-        #print("TABMOW", args)
 
 def retry(max_tries=None, timeout=None):
     if callable(max_tries):
