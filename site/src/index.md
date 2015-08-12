@@ -400,21 +400,6 @@ pipelines and backplanes.
 
 If you find it useful or spot a typo, please let me know.
 
-
-
-
-### What job does this do?
-
-...
-
-### What does it do?
-
-...
-
-## Status
-
-...
-
 ## Source
 
 The source is on github. Ongoing development is here:
@@ -422,25 +407,4 @@ The source is on github. Ongoing development is here:
 * <https://github.com/sparkslabs/guild>
 
 As always, feedback, usecases, devices very welcome.
-
-## Influences / Why write this?
-
-...
-
-## Is this the Day Job?
-
-...
-
-## Is this part of any larger project?
-
-...
-
-## Are there packages?
-
-...
-
-## Release History
-
-...
-
 
