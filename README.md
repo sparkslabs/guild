@@ -266,7 +266,7 @@ this mailbox and executes the method within the thread.
 In a traditional actor model, the code in the camera Actor might look like
 this:
 
-```python hl_lines="6 7 8 16"
+```python
 import pygame, pygame.camera, time
 from guild.actor import *
 pygame.camera.init()
@@ -293,7 +293,7 @@ class Camera(Actor):
 If you did this, the display code would not need any changes. The start-up
 code that links things together though would now need to look like this:
 
-```python hl_lines="1 2 3"
+```python
 display = Display( (800,600) ).go()
 camera = Camera(display).go()
 # No pipeline line anymore
@@ -338,7 +338,7 @@ class FrameStore(Actor):
 
 This could then be used in a Guild pipeline system this way:
 
-```python hl_lines="2 4"
+```python
 camera = Camera().go()
 framestore = FrameStore().go()
 display = Display( (800,600) ).go()
