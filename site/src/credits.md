@@ -25,6 +25,10 @@ updating log and issue or a pull request - happy to update.
 * PyQT compatibility
 * Readme updates
 
+**Samuel Lampa** : <samuel.lampa@gmail.com>, [website](http://bionics.it/)
+
+* Documentation improvements
+
 **Your name here**: contact details
 
 * What you've done/helped with
