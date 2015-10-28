@@ -19,10 +19,10 @@ updating log and issue or a pull request - happy to update.
 * Main examples
 * Python and Debian Packaging
 
-**Jim Easterbrook** : <sparks.m@gmail.com>, <michael.sparks@bbc.co.uk>, [blog](http://www.sparkslabs.com/michael/), [twitter](http://twitter.com/sparks_rd), [Linked in](https://www.linkedin.com/pub/michael-sparks/0/1b9/a93)
+**Jim Easterbrook** : <jim@jim-easterbrook.me.uk>, [website](http://www.jim-easterbrook.me.uk/)
 
 * Python 3 compatibility
-* PyQT compatibility
+* PyQt compatibility
 * Readme updates
 
 **Samuel Lampa** : <samuel.lampa@gmail.com>, [website](http://bionics.it/)
