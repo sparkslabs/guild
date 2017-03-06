@@ -22,6 +22,8 @@ __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "wait_KeyboardInterrupt", "start"]
 
 
+strace = False
+
 class UnboundActorMethod(Exception):
     pass
 
@@ -50,6 +52,8 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
+                            if strace:                                          # EXPERIMENTAL
+                                print "strace:ACTORFUNCTION args", op           # EXPERIMENTAL
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
                             #e, result = resultQueue.get(True, None)
@@ -64,6 +68,8 @@ class ActorMetaclass(type):
                                 raise
                             if e:
                                 six.reraise(*e)
+                            if strace:                                          # EXPERIMENTAL
+                                print "strace:ACTORFUNCTION result", result     # EXPERIMENTAL
                             return result
                         return t
 
@@ -76,6 +82,8 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
+                            if strace:                                            # EXPERIMENTAL
+                                print "strace:CALL ACTORMETHOD", func, args, argd # EXPERIMENTAL
                             self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
@@ -88,6 +96,8 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def t(self, __fcall_timeout=5, *args, **argd):
                             op = (func, self, args, argd)
+                            if strace:                                          # EXPERIMENTAL
+                                print "strace:ACTORFUNCTION args", op           # EXPERIMENTAL
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
                             #e, result = resultQueue.get(True, None)
@@ -100,9 +110,10 @@ class ActorMetaclass(type):
                                 if not self.is_alive():
                                     raise ActorNotStartedException
                                 raise
-                                
                             if e:
                                 six.reraise(*e)
+                            if strace:                                          # EXPERIMENTAL
+                                print "strace:ACTORFUNCTION result", result     # EXPERIMENTAL
                             return result
                         return t
 
@@ -112,6 +123,8 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def s(self, *args, **argd):
+                            if strace:                                          # EXPERIMENTAL
+                                print "strace:PROCESSMETHOD", func, args, argd  # EXPERIMENTAL
                             x = func(self)
                             if x == False:
                                 return
@@ -125,6 +138,8 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def s(self, *args, **argd):
+                            if strace:                                     # EXPERIMENTAL
+                                print "strace:LATEBIND", func, args, argd  # EXPERIMENTAL
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
                     new_dct[name] = mkcallback(fn)
@@ -134,6 +149,8 @@ class ActorMetaclass(type):
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
+                            if strace:                                              # EXPERIMENTAL
+                                print "strace:LATEBINDSAFE", func, self, args, argd # EXPERIMENTAL
                             self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
