@@ -20,10 +20,11 @@ buildrpm:
 	$(PYTHON) setup.py bdist_rpm --post-install=rpm/postinstall --pre-uninstall=rpm/preuninstall
 
 purge:
-	sudo apt-get purge $(PROJECT)
+	sudo apt-get purge python-$(PROJECT)
 
 deb:
 	# debuild -uc -us
+	rm -rf dist
 	python setup.py sdist
 	cd dist && py2dsc $(PROJECT)-* && cd deb_dist/$(PROJECT)-$(VERSION) && debuild -uc -us
 
@@ -36,10 +37,11 @@ pypi:
 	python setup.py sdist upload
 
 use:
-	sudo dpkg -i dist/deb_dist/$(PROJECT)*deb
+	cd dist && cd deb_dist/ && sudo dpkg -i python-$(PROJECT)_*
 
 clean:
 	$(PYTHON) setup.py clean
+	rm -rf dist
 	rm -rf build/ MANIFEST
 	find . -name '*.pyc' -delete
 	rm -f *~
