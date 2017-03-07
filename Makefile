@@ -1,7 +1,7 @@
 PYTHON=`which python`
 DESTDIR=/
 PROJECT=guild
-VERSION=1.0.3
+VERSION=1.1.3
 
 all:
 	@echo "make source - Create source package"
