@@ -13,6 +13,7 @@ from six.moves import queue as _Queue
 import sys
 from threading import Thread as _Thread
 import time
+import sys
 
 __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "actor_method", "actor_function", "process_method",
@@ -36,6 +37,11 @@ class ActorException(Exception):
         super(ActorException, self).__init__(*argv)
         self.__dict__.update(argd)
 
+def Print(*args):
+    sys.stderr.write(" ".join([str(x) for x in args]))
+    sys.stderr.write("\n")
+    sys.stderr.flush()
+
 
 class ActorMetaclass(type):
     def __new__(cls, clsname, bases, dct):
@@ -53,7 +59,7 @@ class ActorMetaclass(type):
                         def t(self, *args, **argd):
                             op = (func, self, args, argd)
                             if strace:                                          # EXPERIMENTAL
-                                print "strace:ACTORFUNCTION args", op           # EXPERIMENTAL
+                                Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
                             #e, result = resultQueue.get(True, None)
@@ -69,7 +75,7 @@ class ActorMetaclass(type):
                             if e:
                                 six.reraise(*e)
                             if strace:                                          # EXPERIMENTAL
-                                print "strace:ACTORFUNCTION result", result     # EXPERIMENTAL
+                                Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
                             return result
                         return t
 
@@ -83,7 +89,7 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def t(self, *args, **argd):
                             if strace:                                            # EXPERIMENTAL
-                                print "strace:CALL ACTORMETHOD", func, args, argd # EXPERIMENTAL
+                                Print("strace:CALL ACTORMETHOD", func, args, argd)# EXPERIMENTAL
                             self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
@@ -97,7 +103,7 @@ class ActorMetaclass(type):
                         def t(self, __fcall_timeout=5, *args, **argd):
                             op = (func, self, args, argd)
                             if strace:                                          # EXPERIMENTAL
-                                print "strace:ACTORFUNCTION args", op           # EXPERIMENTAL
+                                Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
                             self.F_inbound.append((op, resultQueue))
                             self._actor_notify()
                             #e, result = resultQueue.get(True, None)
@@ -113,7 +119,7 @@ class ActorMetaclass(type):
                             if e:
                                 six.reraise(*e)
                             if strace:                                          # EXPERIMENTAL
-                                print "strace:ACTORFUNCTION result", result     # EXPERIMENTAL
+                                Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
                             return result
                         return t
 
@@ -124,7 +130,7 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def s(self, *args, **argd):
                             if strace:                                          # EXPERIMENTAL
-                                print "strace:PROCESSMETHOD", func, args, argd  # EXPERIMENTAL
+                                Print("strace:PROCESSMETHOD", func, args, argd) # EXPERIMENTAL
                             x = func(self)
                             if x == False:
                                 return
@@ -139,7 +145,7 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def s(self, *args, **argd):
                             if strace:                                     # EXPERIMENTAL
-                                print "strace:LATEBIND", func, args, argd  # EXPERIMENTAL
+                                Print("strace:LATEBIND", func, args, argd) # EXPERIMENTAL
                             raise UnboundActorMethod("Call to Unbound Latebind")
                         return s
                     new_dct[name] = mkcallback(fn)
@@ -150,7 +156,7 @@ class ActorMetaclass(type):
                         @_wraps(func)
                         def t(self, *args, **argd):
                             if strace:                                              # EXPERIMENTAL
-                                print "strace:LATEBINDSAFE", func, self, args, argd # EXPERIMENTAL
+                                Print("strace:LATEBINDSAFE", func, self, args, argd)# EXPERIMENTAL
                             self.inbound.append((func, self, args, argd))
                             self._actor_notify()
                         return t
