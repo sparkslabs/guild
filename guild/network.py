@@ -142,6 +142,7 @@ class Selector(Actor):
         # Print("Selector STOPPING")
         pass
 
+# FIXME: This should really be a service
 
 selector = None
 
