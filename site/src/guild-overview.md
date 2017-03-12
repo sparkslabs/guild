@@ -1,4 +1,4 @@
-# A Guild Overview
+# A Guild Overview / Reference
 
 ## Key aspects?
 
@@ -196,11 +196,12 @@ Remember a metaclass works as follows.
 Our decorators change this, such that values that would be functions into values that are tuples. Those tuples are things like: `("ACTORMETHOD", <function object>)` . I describe this as a *tagged functions*, with the tag in this example being `ACTORMETHOD`.
 
 This means our dictionary contains the following things:
-   * Simple values - these will become class attributes
-   * Functions - these will become normal methods
-   * tagged functions - these will be transformed into methods that
-     operate inbound queues to the object, and in some cases interact
-     with outbound queues.
+
+* Simple values - these will become class attributes
+* Functions - these will become normal methods
+* tagged functions - these will be transformed into methods that
+  operate inbound queues to the object, and in some cases interact
+  with outbound queues.
 
 For each tag / tuple type:
 
