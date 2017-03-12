@@ -359,25 +359,25 @@ def pipe(source, source_box, sink, sinkbox):
     source.bind(source_box, sink, sinkbox)
 
 
-def pipeline(*processes):
-    x = list(processes)
+def pipeline(*actors):
+    x = list(actors)
     while len(x) > 1:
         pipe(x[0], "output", x[1], "input")
         del x[0]
 
 
-def wait_for(*processes):
-    for p in processes:
+def wait_for(*actors):
+    for p in actors:
         p.join()
 
 
-def stop(*processes):
-    for p in processes:
+def stop(*actors):
+    for p in actors:
         p.stop()
 
 
-def start(*processes):
-    for p in processes:
+def start(*actors):
+    for p in actors:
         p.start()
 
 
