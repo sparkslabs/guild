@@ -38,7 +38,7 @@ class Sprite(Actor):
         self.sprite_state = Store()
         self.update_pos(400,300)
         self.pos = self.get_pos()
-        print self.pos
+        print( self.pos )
 
     def get_pos(self, force=False):
         if (time.time() < self.sprite_state.last_update) or force:
