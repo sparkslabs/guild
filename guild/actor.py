@@ -23,27 +23,27 @@ __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "wait_KeyboardInterrupt", "start"]
 
 
-strace = False
+strace = False  #NOTE: Overview documented
 
-class UnboundActorMethod(Exception):
+class UnboundActorMethod(Exception): #NOTE: Overview documented
     pass
 
-class ActorNotStartedException(Exception):
+class ActorNotStartedException(Exception): #NOTE: Overview documented
     pass
 
 
-class ActorException(Exception):
+class ActorException(Exception):   #NOTE: Overview documented
     def __init__(self, *argv, **argd):
         super(ActorException, self).__init__(*argv)
         self.__dict__.update(argd)
 
-def Print(*args):
+def Print(*args):   #NOTE: Overview documented
     sys.stderr.write(" ".join([str(x) for x in args]))
     sys.stderr.write("\n")
     sys.stderr.flush()
 
 
-class ActorMetaclass(type):
+class ActorMetaclass(type):   #NOTE: Overview documented
     def __new__(cls, clsname, bases, dct):
         new_dct = {}
         inboxes = {}
@@ -84,7 +84,7 @@ class ActorMetaclass(type):
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
-                    inboxes[fn.func_name] = fn.__doc__
+                    inboxes[fn.__name__] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
@@ -140,7 +140,7 @@ class ActorMetaclass(type):
                     new_dct[name] = mkcallback(fn)
 
                 elif tag == "LATEBIND":
-                    outboxes[fn.func_name] = fn.__doc__
+                    outboxes[fn.__name__] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def s(self, *args, **argd):
@@ -151,7 +151,7 @@ class ActorMetaclass(type):
                     new_dct[name] = mkcallback(fn)
 
                 elif tag == "LATEBINDSAFE":
-                    outboxes[fn.func_name] = fn.__doc__
+                    outboxes[fn.__name__] = fn.__doc__
                     def mkcallback(func):
                         @_wraps(func)
                         def t(self, *args, **argd):
@@ -168,7 +168,7 @@ class ActorMetaclass(type):
         return type.__new__(cls, clsname, bases, new_dct)
 
 
-def actor_method_max_queue(length):
+def actor_method_max_queue(length):  #FIXME: Not actually active...   #NOTE: Overview documented
     def decorator(method):
         return ("ACTORMETHOD", length, method)
     return decorator
