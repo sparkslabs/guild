@@ -77,9 +77,9 @@ In Guild there are similar capabilities:
 
 The following exceptions may be raised by the API.
 
-* **`class guild.actor.ActorException(Exception)`**
-* **`class guild.actor.UnboundActorMethod(Exception)`**
-* **`class guild.actor.ActorNotStartedException(Exception)`**
+* **`class guild.actor.ActorException(Exception)`** -- Should be the base class for the next two exceptions, but for some reason we didn't do that. Is used as a baseclass in other system parts though.
+* **`class guild.actor.UnboundActorMethod(Exception)`** - raisedif an unbound late-bindable method is called.
+* **`class guild.actor.ActorNotStartedException(Exception)`** -- Call to an actor function times out. One reason this can be is if the actor is not started, if that's the case this exception will be raised.
 
 
 
@@ -130,16 +130,19 @@ can be created by the metaclass.
 This seemed like a good idea at the time. It means things like inheritance
 tend to work more correctly.
 
-  * def process_method(method): return ("PROCESSMETHOD", method)
+  * guild.actor.actor_method(method) - decorator that turns the method into an actor method. Calls to this result in a request to call the method inside the actor's thread. This therefore returns immediately.
 
-  * def late_bind(method): return ("LATEBIND", method)
+  * guild.actor.actor_function(timeout=None) - decorator that turns the method into an actor function. Calls to this result in a request to call the method inside the actor's thread, but also to reply back to the caller thread along a threadsafe pipe. This therefore does not return immediately. Furthermore any exception raised inside the actor thread as a result of the function call is propogated back to the caller.
 
-  * def late_bind_safe(method): return ("LATEBINDSAFE", method)
+  * guild.actor.process_method(method): return ("PROCESSMETHOD", method)
 
-  * def actor_function(timeout=None)
-  * def actor_method(method)
-  * def actor_method_lossy_queue(length)
-  * def actor_method_max_queue(length):
+  * guild.actor.late_bind_safe(method): return ("LATEBINDSAFE", method)
+
+  * guild.actor.late_bind(method): return ("LATEBIND", method)
+
+  * guild.actor.actor_method_lossy_queue(length) - decorator that turns the method into an actor method. Beyond that the queue has a maximum size. If you try to make a call and the queue is full, it will silently fail. **NOTE: Not actually implemented(!)**
+
+  * guild.actor.actor_method_max_queue(length) - decorator that turns the method into an actor method. Beyond that the queue has a maximum size. If you try to make a call and the queue is full, you'll get an exception. **NOTE: Not actually implemented(!)**
 
 
 **User functions**
@@ -165,7 +168,7 @@ tend to work more correctly.
 These aren't 'private', but they not part of the public API, so beware of
 using them outside of the implementation of guild.
 
-**`guild.actor.Print`**
+* **`guild.actor.Print`** - prints arguments to stderr, and flushes immediately. The flushing is useful when debugging things internally to guild.
 
 
 
@@ -296,4 +299,5 @@ may not be connected.
 
 The advantage of this however is that it allows you to test actors
 independently of the system they're going into.
+
 
