@@ -9,6 +9,7 @@ all:
 	@echo "make buildrpm - Generate a rpm package"
 	@echo "make builddeb - Generate a deb package"
 	@echo "make clean - Get rid of scratch and byte files"
+	@echo "make edit - run kate with session 'Guild'"
 
 source:
 	$(PYTHON) setup.py sdist $(COMPILE)
@@ -57,4 +58,7 @@ distclean:
 	find . -name '*.pyc' -delete
 
 
-devloop: purge clean deb use 
+devloop: purge clean deb use
+
+edit:
+	((kate --new -s Guild </dev/null >/dev/null 2>/dev/null)&)&
