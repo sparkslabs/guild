@@ -1,7 +1,10 @@
 
 #include <iostream>
-
 #include <thread>
+#include <deque>
+#include <exception>
+#include <mutex>
+
 // #include <condition_variable>
 // #include <mutex>
 
@@ -17,6 +20,38 @@ void busywait(int lmax) {
 
 bool WAITFOREXIT = true;
 bool NOWAITFOREXIT = false;
+
+class StopIteration: public std::exception {
+    virtual const char* what() const throw() {
+        return "StopIteration";
+    }
+};
+
+
+template <class T> 
+class Queue {
+private:
+    std::deque<T> m_queue;
+    std::mutex m_mutex;
+public:
+    void put(T item) {
+        m_queue.push_back(item);
+        std::cout << "APPEND " << item << std::endl;
+    }
+    T get() {  //        std::cout << "Really ought to check the queue length first" << std::endl;
+        T result;
+        m_mutex.lock();
+        if (m_queue.empty()) {
+            m_mutex.unlock();
+            throw StopIteration();
+        }
+        result = m_queue.front();
+        m_queue.pop_front();
+        m_mutex.unlock();
+        return result;
+    }
+};
+
 
 class Actor { // I know this is bad practice. This is a sketch remember?
 public:
@@ -60,11 +95,7 @@ public:
     }
 };
 
-
-int main(int argc, char *argv[]) {
-    std::cout << "Hello" << std::endl;
-    std::cout << "World" << std::endl;
-
+void actortest() {
     Actor simple1;
     Actor simple2(NOWAITFOREXIT);
 //    Dramatic Sherlock(WAITFOREXIT);
@@ -79,7 +110,26 @@ int main(int argc, char *argv[]) {
         busywait(100);
         std::cout << "                                          Display From MainThread "<< std::this_thread::get_id() <<" ?:" << i << std::endl;
     }
- 
+}
+
+int main(int argc, char *argv[]) {
+    Queue<int> q;
+
+    std::cout << "Hello" << std::endl;
+    std::cout << "World" << std::endl;
+
+    for(int i=0; i<10; i++) {
+        q.put(i);
+    }
+    while(true) {
+        try {
+            std::cout << "POP: " << q.get() << std::endl;
+        } catch (StopIteration& e) {
+            break;
+        }
+    }
+
+    // actortest(); 
     std::cout<<"Exit of Main function"<<std::endl;
 
     return 0;
