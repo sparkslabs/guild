@@ -77,6 +77,7 @@ public:
             if (timeout_ms and so_far_ms > timeout_ms) {
                 throw EmptyQueueTimeout();
             }
+            std::this_thread::yield();
         }
 
         result = m_queue.front();
