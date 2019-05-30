@@ -4,10 +4,12 @@
 #include <deque>
 #include <exception>
 #include <mutex>
+#include <chrono>
 
 // #include <condition_variable>
-// #include <mutex>
 
+bool WAITFOREXIT = true;
+bool NOWAITFOREXIT = false;
 
 void busywait(int lmax) {
     for(int i=0; i<lmax; i++) {
@@ -18,33 +20,65 @@ void busywait(int lmax) {
     }
 }
 
-bool WAITFOREXIT = true;
-bool NOWAITFOREXIT = false;
-
-class StopIteration: public std::exception {
+class EmptyQueue: public std::exception {
     virtual const char* what() const throw() {
-        return "StopIteration";
+        return "EmptyQueue";
     }
 };
 
+class EmptyQueueTimeout: public std::exception {
+    virtual const char* what() const throw() {
+        return "EmptyQueueTimeout";
+    }
+};
+
+using namespace std::chrono_literals;
 
 template <class T> 
 class Queue {
-private:
     std::deque<T> m_queue;
     std::mutex m_mutex;
 public:
+
     void put(T item) {
+        m_mutex.lock();
         m_queue.push_back(item);
-        std::cout << "APPEND " << item << std::endl;
+        m_mutex.unlock();
     }
-    T get() {  //        std::cout << "Really ought to check the queue length first" << std::endl;
+
+    T get_nowait() {
         T result;
         m_mutex.lock();
         if (m_queue.empty()) {
             m_mutex.unlock();
-            throw StopIteration();
+            throw EmptyQueue();
         }
+        result = m_queue.front();
+        m_queue.pop_front();
+        m_mutex.unlock();
+        return result;
+    }
+
+    T get() {
+        return get_timeout(0);
+    }
+
+    T get_timeout(int timeout_ms) {
+        int so_far_ms = 0;
+        T result;
+        while (true) {
+            m_mutex.lock();
+            if (!m_queue.empty()) {
+                break;
+            }
+            m_mutex.unlock();
+            std::this_thread::sleep_for(2ms);
+            so_far_ms += 2;
+            if (timeout_ms and so_far_ms > timeout_ms) {
+                throw EmptyQueueTimeout();
+            }
+        }
+
         result = m_queue.front();
         m_queue.pop_front();
         m_mutex.unlock();
@@ -72,64 +106,80 @@ public:
     void run() {
         m_Thread = std::thread(&Actor::main, this);
         if (!m_let_me_finish) {
-            std::cout << "m_let_me_finish:" << m_let_me_finish << std::endl;
             m_Thread.detach();
         }
     }
     ~Actor() {
         if (m_let_me_finish) {
-            m_Thread.join(); // Probably want to do something different?
+            m_Thread.join(); // Appropriate?
         }
     }
 };
 
-class Dramatic : public Actor {     // Example Actor
+
+
+class Producer : public Actor {
 public:
-    Dramatic(): Actor() { };        // Always initialise cleanly...
-    Dramatic(bool X): Actor(X) { }; // Always initialise cleanly...
+    std::string m_tag;
+    Queue<int> * q;
+
+    Producer(std::string name): Actor(), m_tag(name) {}
+    Producer(std::string name, Queue<int> * Q): Actor(), m_tag(name), q(Q) {}
+    void set_outbox(Queue<int> * Q) {
+        q = Q;
+    }
     void main() {
         for(int i=0; i<20; i++) {
             busywait(95);
-            std::cout << "             I am DRAMATIC " << std::this_thread::get_id() << " Executing:" << i << std::endl;
+            q->put(i);
         }
+        q->put(-1);
     }
 };
 
-void actortest() {
-    Actor simple1;
-    Actor simple2(NOWAITFOREXIT);
-//    Dramatic Sherlock(WAITFOREXIT);
-//    Dramatic Sherlock(NOWAITFOREXIT);
-    Dramatic Sherlock;
 
-    simple1.run();
-    simple2.run();
-    Sherlock.run();
+class Consumer : public Actor {
+public:
+    std::string m_tag;
+    Queue<int> * q;
 
-    for(int i=0; i<10; i++) {
-        busywait(100);
-        std::cout << "                                          Display From MainThread "<< std::this_thread::get_id() <<" ?:" << i << std::endl;
+    Consumer(std::string name): Actor(), m_tag(name) {}
+    Consumer(std::string name, Queue<int> * Q): Actor(), m_tag(name), q(Q) {}
+    void set_inbox(Queue<int> * Q) {
+        q = Q;
     }
-}
+    void main() {
+        while(true) {
+            int result;
+            busywait(105);
+            try {
+                result = q->get_timeout(10);
+            } catch (EmptyQueueTimeout& e) {
+                break;
+            }
+            std::cout << "CONSUMER " << m_tag << " " << result << std::endl;
+        }
+        std::cout << "CONSUMER " << m_tag << " exitting" << std::endl;
+    }
+};
+
 
 int main(int argc, char *argv[]) {
     Queue<int> q;
 
-    std::cout << "Hello" << std::endl;
-    std::cout << "World" << std::endl;
+    Producer P1("P1", &q);
+    Producer P2("P2");
+    Consumer C1("C1", &q);
+    P2.set_outbox(&q);
+
+    P1.run();
+    P2.run();
+    C1.run();
 
     for(int i=0; i<10; i++) {
-        q.put(i);
-    }
-    while(true) {
-        try {
-            std::cout << "POP: " << q.get() << std::endl;
-        } catch (StopIteration& e) {
-            break;
-        }
+            busywait(200);
     }
 
-    // actortest(); 
     std::cout<<"Exit of Main function"<<std::endl;
 
     return 0;
