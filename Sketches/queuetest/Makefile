@@ -1,7 +1,7 @@
 
 
 all:
-	g++ -Wall -o queuetest -std=c++11 actorqueue.cpp  -lpthread
+	g++ -Wall -o queuetest -std=c++14 actorqueue.cpp  -lpthread
 
 distclean:
 	rm -f queuetest
