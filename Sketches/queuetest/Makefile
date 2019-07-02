@@ -6,3 +6,7 @@ all:
 distclean:
 	rm -f queuetest
 	rm -f *~
+
+clean:
+	rm -f queuetest
+	rm -f *~
