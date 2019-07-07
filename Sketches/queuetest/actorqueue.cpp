@@ -6,11 +6,12 @@
 #include <mutex>
 #include <chrono>
 
-// #include <condition_variable>
+// #include  <condition_variable>
 
 bool WAITFOREXIT = true;
 bool NOWAITFOREXIT = false;
 
+// Yes, this not actually intended for use
 void busywait(int lmax) {
     for(int i=0; i<lmax; i++) {
         for(int j=0; j<lmax; j++) {
