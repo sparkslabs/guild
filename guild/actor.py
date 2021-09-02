@@ -335,9 +335,12 @@ class Actor(ActorMixin, _Thread):
         self.process_start()
         self.process()
         try:
-            g = self.gen_process()
+            g = self.main()
         except AttributeError:
-            g = None
+            try:
+                g = self.gen_process()
+            except AttributeError:
+                g = None
         while not self.killflag:
 
             while (self.F_inbound or self.inbound or self.core):
