@@ -350,6 +350,8 @@ class Actor(ActorMixin, _Thread):
                 try:
                     next(g)
                 except StopIteration:
+                    # Print("Generator Exited")
+                    self.stop()
                     g = None
         self.onStop()
         if g:
