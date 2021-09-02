@@ -24,6 +24,7 @@ __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
 
 
 strace = False  #NOTE: Overview documented
+trace_actor_calls = False
 
 class UnboundActorMethod(Exception): #NOTE: Overview documented
     pass
@@ -228,6 +229,8 @@ class ActorMixin(object):
         # print command
         callback, zelf, argv, argd = command
         if zelf:
+            if trace_actor_calls:
+                Print("ActorCall:", zelf.__class__.__name__ +"."+ callback.__name__, argv, argd)
             try:
                 result = callback(zelf, *argv, **argd)
                 return result
