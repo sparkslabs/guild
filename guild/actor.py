@@ -339,14 +339,18 @@ class Actor(ActorMixin, _Thread):
         except AttributeError:
             g = None
         while not self.killflag:
+
+            while (self.F_inbound or self.inbound or self.core):
+                self._actor_do_queued()
+
+            if not self._actor_do_queued():
+                if g is None:
+                    time.sleep(0.01)
             if g:
                 try:
                     next(g)
                 except StopIteration:
                     g = None
-            if not self._actor_do_queued():
-                if g is None:
-                    time.sleep(0.01)
         self.onStop()
         if g:
             try:
