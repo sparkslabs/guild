@@ -4,12 +4,21 @@ PROJECT=guild
 VERSION=1.1.3
 
 all:
+	@echo "Preferred targets"
+	@echo
+	@echo "make deb - Generate a deb package"
+	@echo "make use - Install the debian package"
+	@echo "make purge - Uninstall the debian package"
+	@echo "make devloop - purge current deb, build new deb, and install new debian package"
+	@echo "----------------------------------------------------------------"
+	@echo "Source based targets"
+	@echo
 	@echo "make source - Create source package"
-	@echo "make install - Install on local system"
-	@echo "make buildrpm - Generate a rpm package"
-	@echo "make builddeb - Generate a deb package"
-	@echo "make clean - Get rid of scratch and byte files"
-	@echo "make edit - run kate with session 'Guild'"
+	@echo "make install - Install source package on local system (prefer debs though)"
+	@echo "----------------------------------------------------------------"
+	@echo "make clean - Get rid of scratch and byte files (distclean is a synonym)"
+	@echo "make test - run tests"
+	# @echo "make buildrpm - Generate a rpm package"
 
 source:
 	$(PYTHON) setup.py sdist $(COMPILE)
@@ -52,13 +61,7 @@ clean:
 test:
 	cd features && behave
 
-distclean:
-	$(PYTHON) setup.py clean
-	rm -f *~
-	rm -rf dist
-	rm -rf build/ MANIFEST
-	find . -name '*.pyc' -delete
-
+distclean: clean
 
 devloop: purge clean deb use
 
