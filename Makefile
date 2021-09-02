@@ -1,4 +1,4 @@
-PYTHON=`which python`
+PYTHON=`which python3`
 DESTDIR=/
 PROJECT=guild
 VERSION=1.1.3
@@ -21,24 +21,26 @@ buildrpm:
 	$(PYTHON) setup.py bdist_rpm --post-install=rpm/postinstall --pre-uninstall=rpm/preuninstall
 
 purge:
-	sudo apt-get purge python-$(PROJECT)
+	sudo apt-get -y purge python3-$(PROJECT)
+
 
 deb:
 	# debuild -uc -us
 	rm -rf dist
-	python setup.py sdist
+	$(PYTHON) setup.py sdist
 	cd dist && py2dsc $(PROJECT)-* && cd deb_dist/$(PROJECT)-$(VERSION) && debuild -uc -us
 
 ppadeb:
-	python setup.py sdist
+	$(PYTHON) setup.py sdist
 	cd dist && py2dsc $(PROJECT)-* && cd deb_dist/$(PROJECT)-$(VERSION) && debuild -S && cd .. && dput ppa:sparkslabs/packages $(PROJECT)_*_source.changes
 	@echo "Clean up dist before uploading to pypi, or it'll contain too much junk"
 
 pypi:
-	python setup.py sdist upload
+	$(PYTHON) setup.py sdist upload
 
 use:
-	cd dist && cd deb_dist/ && sudo dpkg -i python-$(PROJECT)_*
+	cd dist && cd deb_dist/ && sudo dpkg -i python3-$(PROJECT)_*
+
 
 clean:
 	$(PYTHON) setup.py clean
