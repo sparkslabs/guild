@@ -14,6 +14,7 @@ import sys
 from threading import Thread as _Thread
 import time
 import sys
+import inspect
 
 __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "actor_method", "actor_function", "process_method",
@@ -335,12 +336,25 @@ class Actor(ActorMixin, _Thread):
         self.process_start()
         self.process()
         try:
-            g = self.main()
+            gen = self.main
         except AttributeError:
             try:
-                g = self.gen_process()
+                gen = self.gen_process
             except AttributeError:
-                g = None
+                gen = None
+
+        if gen:
+            # NB next line looks at the code object, and checks a flag
+            if inspect.isgeneratorfunction(gen):
+                g = gen()
+            else:
+                function_name = gen.__self__.__class__.__name__ +"."+gen.__name__
+                source_ref = "(%s, line: %d)" % (gen.__func__.__code__.co_filename, gen.__func__.__code__.co_firstlineno)
+                warning = "Function %s %s must be a generator" % (function_name, source_ref)
+                raise ValueError(warning)
+        else:
+            g = None
+
         while not self.killflag:
 
             while (self.F_inbound or self.inbound or self.core):
