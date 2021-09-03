@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/), within
 reason.
 
+## [NEXT] - YYYY-MM-DD
+
+## [1.1.4] - 2021-09-03
+
+Bunch of minor changes improving the interface.
+
+* Enable tracing of actor calls
+  Periodcally it's useful to see what's actually being transferred between
+  which actors. Having this as a flag that can be set ...
+
+      import guild
+      guild.trace_actor_calls =  True
+
+  ... makes this quite simple/useful.
+
+* Update `Makefile` targets
+  The makefile is used as an interface for a bunch of useful things to do.
+  Sign posting which bits to use I think is useful, hence the updates.
+
+* Drop support for python2 builds
+  Been using python3 pretty exclusively for a while, and python2 was EOL a
+  while back, so dropping support here seems reasonable.
+
+* Process incoming messages before main loop
+  These were done after the main loop. However this led to to some minor
+  oddities - such as if an actor has a number of late bound methods, you
+  needed a matching number of yields before you could assume they've been
+  dealt with.
+
+  It will become clear at some point whether this is a good idea or a bad
+  one, but for now it's a better decision than the one before.
+
+* When the main loop generator exits, set stop flag
+  This is to match the intent - which is to run one generator and then
+  stop. This may in itself be changed at some point (for example to handle
+  certain sorts of state machine better - RTSP springs to mind), but for
+  now this seems a reasonable plan. (It's better than the thread
+  continuing to run but not actually have any work to do!)
+
+* Allow use of `main()` as well as `gen_process()`
+  It's more intuitive to use `main()` as the main loop (if any) of the
+  actor. More intuitive than `gen_process()` at least - so you can
+  now use `main()` instead. At some point `gen_process()` will become
+  deprecated, but it's been the core name for a while, so it can stay for
+  now.
+
+* Make calls to unbound late bound methods report which one is bust
+  Before was not very helpful:
+
+      guild.actor.UnboundActorMethod: Call to Unbound Latebind
+
+  How it's more helpful:
+
+      guild.actor.UnboundActorMethod: ('Call to Unbound Latebind', <function Client.get_new_frame at 0x7fc07c3654c0>)
+
+  Could be prettier, but it's more useful this way.
+
+* Ensure that generator in main thread is a generator
+
+In order to run the thread mainloop, we run a generator alongside the
+interactions needed for the actor (outbound/inbound queues).
+
+Given that the function the user supplies must be a generator or else
+there will be subtle errors that start creeping in. So we now enforce
+this by checking the code object before starting it. Raises a ValueError
+(which is perhaps wrong error) if the function isn't a generator (which
+is technically a value error, but perhaps something better might be
+useful)
+
+## [1.1.3] - 2017-03-23
+
+* Added experimental "strace" style trace support
+* Added some initial TCP networking tools (select based server/sockets)
+  to the existing multicast examples
+* Added a simple echo server and tracing/debug example
+* Added overview/ref documentation of guild actors
+
 ## [1.0.3] - 2015-07-28
 
 * Fix packaging details on PyPI and Launchpad
