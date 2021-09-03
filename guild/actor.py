@@ -147,7 +147,7 @@ class ActorMetaclass(type):   #NOTE: Overview documented
                         def s(self, *args, **argd):
                             if strace:                                     # EXPERIMENTAL
                                 Print("strace:LATEBIND", func, args, argd) # EXPERIMENTAL
-                            raise UnboundActorMethod("Call to Unbound Latebind")
+                            raise UnboundActorMethod("Call to Unbound Latebind", func)
                         return s
                     new_dct[name] = mkcallback(fn)
 
