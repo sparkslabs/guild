@@ -1,7 +1,7 @@
 PYTHON=`which python3`
 DESTDIR=/
 PROJECT=guild
-VERSION=1.1.3
+VERSION=1.1.6
 
 all:
 	@echo "Preferred targets"
