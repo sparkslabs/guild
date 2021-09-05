@@ -6,6 +6,29 @@ reason.
 
 ## [NEXT] - YYYY-MM-DD
 
+## [1.1.6] - 2021-09-04
+
+Version bumped to keep ppa packaging happy.
+
+* Update stdeb.cfg for python3 building on launchpad properly
+  - Incorrectly still assumed python2 build environment.
+  - Bumped version suite
+  - Incorrect dependencies removed
+  - Correct dependency AND build dependencies added
+  - Python version bumped to match current state"
+
+* Fix RST formatting in doc string
+  Previously used a heading line that was informally accepted by
+  PYPI RST parser, but is now rejected. Fixed.
+
+(not released to pypi since changes to primarily keep Launchpad happy)
+
+## [1.1.5] - 2021-09-04
+
+Version bumped to keep ppa packaging happy.
+
+(not released to pypi since changes to primarily keep Launchpad happy)
+
 ## [1.1.4] - 2021-09-03
 
 Bunch of minor changes improving the interface.
