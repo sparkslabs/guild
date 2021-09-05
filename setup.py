@@ -445,8 +445,9 @@ There are lots of fringe benefits of this - which are best discussed in
 later posts, but this does indicate best how Guild differs from the
 usual actor model.
 
+
 Why write and release this?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 In late 2013/early 2013, I was working on a project with an aim of
 investigating various ideas relating to of the Internet of Things.  (In
