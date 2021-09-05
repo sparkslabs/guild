@@ -1,9 +1,10 @@
 #!/usr/bin/python
-
 #
+#-------------------------------------------------------------------------
+#
+
 # Careful with naming to deliberately allow this:
 # from actor import *
-#
 
 from collections import deque as _deque
 from functools import wraps as _wraps
