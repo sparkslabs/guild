@@ -29,7 +29,7 @@ class Follow(Actor):
         self.f = None
         super(Follow, self).__init__()
 
-    def gen_process(self):
+    def main(self):
         self.f = f = file(self.fname)
         f.seek(0, 2)  # go to the end
         while True:

@@ -59,7 +59,7 @@ class Player(Actor):
         self.paused = False
         super(Player, self).__init__()
 
-    def gen_process(self):
+    def main(self):
         self.reader = VideoFileReader(self.video_file)
         raw_image = None
         while True:
@@ -89,7 +89,7 @@ class PlayerQt(QtActorMixin, QtCore.QObject):
         self.paused = False
         super(PlayerQt, self).__init__()
 
-    def gen_process(self):
+    def main(self):
         self.reader = VideoFileReader(self.video_file)
         raw_image = None
         while True:

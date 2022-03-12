@@ -61,11 +61,18 @@ class QtActorMixin(ActorMixin):
     def _qtactor_run(self):
         self.process_start()
         self.process()
+
         # get gen_process generator
         try:
-            self._qtactor_gen = self.gen_process()
+            gen = self.main()
         except AttributeError:
-            self._qtactor_gen = None
+            try:
+                gen = self.gen_process()
+            except AttributeError:
+                gen = None
+
+        self._qtactor_gen =  gen
+
         # do first step
         if self._qtactor_gen:
             self._qtactor_step()
