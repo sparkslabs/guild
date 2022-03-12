@@ -111,7 +111,7 @@ class Selector(Actor):
     def add_exceptional(self, sock, callback):
         self.exceptionals[sock] = callback
 
-    def gen_process(self):
+    def main(self):
         self.readers_busy = {}
 
         while True:
