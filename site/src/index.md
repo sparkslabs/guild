@@ -78,7 +78,7 @@ First of all the code, then a brief discussion.
     pygame.camera.init()
 
     class Camera(Actor):
-        def gen_process(self):
+        def main(self):
             camera = pygame.camera.Camera(pygame.camera.list_cameras()[0])
             camera.start()
             while True:
@@ -165,7 +165,7 @@ Once again, first the code, then a discussion.
             self.filename = filename
             self.f = None
 
-        def gen_process(self):
+        def main(self):
             self.f = f = file(self.filename)
             f.seek(0,2)   # seek to end
             while True:
@@ -274,7 +274,7 @@ this:
             super(Camera, self).__init__()
             self.display = display
 
-        def gen_process(self):
+        def main(self):
             camera = pygame.camera.Camera(pygame.camera.list_cameras()[0])
             camera.start()
             while True:
