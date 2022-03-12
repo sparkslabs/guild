@@ -31,7 +31,7 @@ p = pyaudio.PyAudio()
 
 
 class AudioCapture(Actor):
-    def gen_process(self):
+    def main(self):
         global p
         yield 1
         CHUNK = 2048
@@ -113,7 +113,7 @@ class WaveWriter(Actor):
 
 
 class WebCamTest(Actor):
-    def gen_process(self):
+    def main(self):
         device = "/dev/video0"
 
         capturesize = vidsize
