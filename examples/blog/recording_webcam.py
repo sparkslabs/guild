@@ -13,7 +13,7 @@ pygame.camera.init()
 
 
 class Camera(Actor):
-    def gen_process(self):
+    def main(self):
         camera = pygame.camera.Camera(pygame.camera.list_cameras()[0])
         camera.start()
         while True:

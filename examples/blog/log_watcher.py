@@ -15,7 +15,7 @@ class Follow(Actor):
         self.filename = filename
         self.f = None
 
-    def gen_process(self):
+    def main(self):
         self.f = f = file(self.filename)
         f.seek(0, 2)   # seek to end
         while True:

@@ -8,7 +8,7 @@ from guild.actor import *
 
 class Display(Actor):
 
-    def gen_process(self):
+    def main(self):
       displaysize = 800,600
       self.display = pygame.display.set_mode(displaysize)
 
