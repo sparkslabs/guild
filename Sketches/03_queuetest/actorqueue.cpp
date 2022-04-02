@@ -5,21 +5,18 @@
 #include <exception>
 #include <mutex>
 #include <chrono>
+#include <unistd.h>
 
 // #include  <condition_variable>
 
 bool WAITFOREXIT = true;
 bool NOWAITFOREXIT = false;
 
-// Yes, this not actually intended for use
-void busywait(int lmax) {
-    for(int i=0; i<lmax; i++) {
-        for(int j=0; j<lmax; j++) {
-            for(int k=0; k<lmax; k++) {
-            }
-        }
-    }
+void sleepmilli(int millis) {
+    usleep(millis*1000);
 }
+
+
 
 class EmptyQueue: public std::exception {
     virtual const char* what() const throw() {
@@ -97,7 +94,7 @@ public:
 protected:
     virtual void main() {
         for(int i=0; i<20; i++) {
-            busywait(350);
+            sleepmilli(350);
             std::cout << "              Actor::main " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -132,7 +129,7 @@ public:
     }
     void main() {
         for(int i=0; i<20; i++) {
-            busywait(95);
+            sleepmilli(95);
             q->put(i);
         }
         q->put(-1);
@@ -153,7 +150,7 @@ public:
     void main() {
         while(true) {
             int result;
-            busywait(105);
+            sleepmilli(105);
             try {
                 result = q->get_timeout(10);
             } catch (EmptyQueueTimeout& e) {
@@ -179,7 +176,7 @@ int main(int argc, char *argv[]) {
     C1.run();
 
     for(int i=0; i<10; i++) {
-            busywait(200);
+            sleepmilli(200);
     }
 
     std::cout<<"Exit of Main function"<<std::endl;

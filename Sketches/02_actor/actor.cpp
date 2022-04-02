@@ -1,19 +1,16 @@
 
 #include <iostream>
+#include <unistd.h>
 
 #include <thread>
 // #include <condition_variable>
 // #include <mutex>
 
-
-void busywait(int lmax) {
-    for(int i=0; i<lmax; i++) {
-        for(int j=0; j<lmax; j++) {
-            for(int k=0; k<lmax; k++) {
-            }
-        }
-    }
+void sleepmilli(int millis) {
+    usleep(millis*1000);
 }
+
+
 
 bool WAITFOREXIT = true;
 bool NOWAITFOREXIT = false;
@@ -26,7 +23,7 @@ public:
 protected:
     virtual void main() {
         for(int i=0; i<20; i++) {
-            busywait(350);
+            sleepmilli(350);
             std::cout << "              Actor::main " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -54,7 +51,7 @@ public:
     Dramatic(bool X): Actor(X) { }; // Always initialise cleanly...
     void main() {
         for(int i=0; i<20; i++) {
-            busywait(95);
+            sleepmilli(95);
             std::cout << "             I am DRAMATIC " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -76,7 +73,7 @@ int main(int argc, char *argv[]) {
     Sherlock.run();
 
     for(int i=0; i<10; i++) {
-        busywait(100);
+        sleepmilli(100);
         std::cout << "                                          Display From MainThread "<< std::this_thread::get_id() <<" ?:" << i << std::endl;
     }
  
