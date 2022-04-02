@@ -1,8 +1,12 @@
 
 
 all:
-	g++ -o threadtest -std=c++11 threadtest.cpp  -lpthread 
+	g++ -o threadtest -std=c++14 threadtest.cpp  -lpthread
 
 distclean:
+	rm -f threadtest
+	rm -f *~
+
+clean:
 	rm -f threadtest
 	rm -f *~
