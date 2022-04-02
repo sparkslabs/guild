@@ -33,8 +33,8 @@ public:
     Actor(bool X): m_Thread(), m_let_me_finish(X) { };
     void run() {
         m_Thread = std::thread(&Actor::main, this);
+        std::cout << "m_let_me_finish:" << m_let_me_finish << std::endl;
         if (!m_let_me_finish) {
-            std::cout << "m_let_me_finish:" << m_let_me_finish << std::endl;
             m_Thread.detach();
         }
     }
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     std::cout << "World" << std::endl;
 
     Actor simple1;
-    Actor simple2(NOWAITFOREXIT);
+    Actor simple2(WAITFOREXIT);
 //    Dramatic Sherlock(WAITFOREXIT);
 //    Dramatic Sherlock(NOWAITFOREXIT);
     Dramatic Sherlock;
