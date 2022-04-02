@@ -5,12 +5,9 @@
 #include <thread>
 // #include <condition_variable>
 // #include <mutex>
+#include <chrono>
 
-void sleepmilli(int millis) {
-    usleep(millis*1000);
-}
-
-
+using namespace std::chrono_literals;
 
 bool WAITFOREXIT = true;
 bool NOWAITFOREXIT = false;
@@ -23,7 +20,7 @@ public:
 protected:
     virtual void main() {
         for(int i=0; i<20; i++) {
-            sleepmilli(350);
+            std::this_thread::sleep_for(350ms);
             std::cout << "              Actor::main " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -51,7 +48,7 @@ public:
     Dramatic(bool X): Actor(X) { }; // Always initialise cleanly...
     void main() {
         for(int i=0; i<20; i++) {
-            sleepmilli(95);
+            std::this_thread::sleep_for(95ms);
             std::cout << "             I am DRAMATIC " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -73,7 +70,7 @@ int main(int argc, char *argv[]) {
     Sherlock.run();
 
     for(int i=0; i<10; i++) {
-        sleepmilli(100);
+        std::this_thread::sleep_for(100ms);
         std::cout << "                                          Display From MainThread "<< std::this_thread::get_id() <<" ?:" << i << std::endl;
     }
  

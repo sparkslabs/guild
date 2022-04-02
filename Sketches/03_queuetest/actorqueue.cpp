@@ -6,6 +6,9 @@
 #include <mutex>
 #include <chrono>
 #include <unistd.h>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 // #include  <condition_variable>
 
@@ -94,7 +97,7 @@ public:
 protected:
     virtual void main() {
         for(int i=0; i<20; i++) {
-            sleepmilli(350);
+            std::this_thread::sleep_for(350ms);
             std::cout << "              Actor::main " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -129,7 +132,7 @@ public:
     }
     void main() {
         for(int i=0; i<20; i++) {
-            sleepmilli(95);
+            std::this_thread::sleep_for(95ms);
             q->put(i);
         }
         q->put(-1);
@@ -150,7 +153,7 @@ public:
     void main() {
         while(true) {
             int result;
-            sleepmilli(105);
+            std::this_thread::sleep_for(105ms);
             try {
                 result = q->get_timeout(10);
             } catch (EmptyQueueTimeout& e) {
@@ -176,7 +179,7 @@ int main(int argc, char *argv[]) {
     C1.run();
 
     for(int i=0; i<10; i++) {
-            sleepmilli(200);
+            std::this_thread::sleep_for(200ms);
     }
 
     std::cout<<"Exit of Main function"<<std::endl;

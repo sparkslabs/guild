@@ -2,16 +2,13 @@
 #include <iostream>
 #include <unistd.h>
 #include <thread>
+#include <chrono>
 
-
-void sleepmilli(int millis) {
-    usleep(millis*1000);
-}
-
+using namespace std::chrono_literals;
 
 void thread_function() {
     for(int i=0; i<10; i++) {
-        sleepmilli(700);
+        std::this_thread::sleep_for(700ms);
         std::cout << "thread function " << std::this_thread::get_id() << " Executing:" << i << std::endl;
     }
 }
@@ -19,7 +16,7 @@ void thread_function() {
 struct ThreadFunctionObject {
     void operator()() {
         for(int i=0; i<20; i++) {
-            sleepmilli(350);
+            std::this_thread::sleep_for(350ms);
             std::cout << "              ThreadFunctionObject " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -29,7 +26,7 @@ struct Actor {
     std::thread m_Thread;
     void main() {
         for(int i=0; i<20; i++) {
-            sleepmilli(500);
+            std::this_thread::sleep_for(500ms);
             std::cout << "              Actor::main " << std::this_thread::get_id() << " Executing:" << i << std::endl;
         }
     }
@@ -51,7 +48,7 @@ int main(int argc, char *argv[]) {
     Actor simple;
     simple.run();
     for(int i=0; i<10; i++) {
-        sleepmilli(1000);
+        std::this_thread::sleep_for(1000ms);
         std::cout << "                                          Display From MainThread "<< std::this_thread::get_id() <<" ?:" << i << std::endl;
     }
  
