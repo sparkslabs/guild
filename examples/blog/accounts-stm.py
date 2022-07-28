@@ -123,7 +123,7 @@ class Account2(object):
     @retry(timeout=0.004)        # Timeout after 5 milliseconds (Are we really that worried?)
     def withdraw(self, amount):
         curr_balance = self.account_info.checkout("balance")
-        print "ATTEMPT WITHDRAW", amount, self, curr_balance 
+        print( "ATTEMPT WITHDRAW", amount, self, curr_balance )
         if curr_balance.value < amount:
             raise InsufficientFunds("Insufficient Funds in your account",
                                     requested=amount,
@@ -131,7 +131,7 @@ class Account2(object):
         new_balance = curr_balance.value - amount
         curr_balance.set(new_balance)
         curr_balance.commit()
-        print "WITHDRAW SUCCESS", amount, self, curr_balance
+        print( "WITHDRAW SUCCESS", amount, self, curr_balance )
         return amount
 
     @property
@@ -161,11 +161,11 @@ class MischiefMaker(Actor):
     def process(self):
         try:
             grab = random.randint(1, 10) * 10
-            print "TRANSFER", grab, self.friendsaccount, self.myaccount, self.name
+            print( "TRANSFER", grab, self.friendsaccount, self.myaccount, self.name )
             transfer(grab, self.friendsaccount, self.myaccount)
-            print "TRANSFER SUCCESS", grab, self.friendsaccount, self.myaccount, self.name
+            print( "TRANSFER SUCCESS", grab, self.friendsaccount, self.myaccount, self.name )
         except InsufficientFunds as e:
-            print "Awww, Tapped out", e.balance, "<", e.requested
+            print( "Awww, Tapped out", e.balance, "<", e.requested )
             self.stop()
             return
         self.grabbed = self.grabbed + grab
@@ -180,12 +180,12 @@ fred = MischiefMaker(account1, account2, "fred").go()
 wait_for(fred, barney)
 
 
-print "GAME OVER"
+print( "GAME OVER")
 
-print "Fred grabbed", fred.grabbed
-print "Barney grabbed", barney.grabbed
-print "Total grabbed", fred.grabbed + barney.grabbed
-print "Since they stopped grabbing..."
-print "Money left", account1.balance, account2.balance
-print "Ending money", account1.balance + account2.balance
+print( "Fred grabbed", fred.grabbed)
+print( "Barney grabbed", barney.grabbed)
+print( "Total grabbed", fred.grabbed + barney.grabbed)
+print( "Since they stopped grabbing...")
+print( "Money left", account1.balance, account2.balance)
+print( "Ending money", account1.balance + account2.balance)
 
