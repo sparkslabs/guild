@@ -10,7 +10,7 @@ from collections import deque as _deque
 from functools import wraps as _wraps
 import logging
 import six
-from six.moves import queue as _Queue
+import queue as _Queue
 import sys
 from threading import Thread as _Thread
 import time
