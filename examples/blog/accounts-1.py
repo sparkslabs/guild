@@ -17,7 +17,7 @@ class Account(Actor):
     @actor_function
     def deposit(self, amount):
         # This is a function to allow the deposit to be confirmed
-        print "DEPOSIT", "\t", amount, "\t", self.balance
+        print( "DEPOSIT", "\t", amount, "\t", self.balance)
         self.balance = self.balance + amount
         return self.balance
 
@@ -28,7 +28,7 @@ class Account(Actor):
                                     requested=amount,
                                     balance=self.balance)
         self.balance = self.balance - amount
-        print "WITHDRAW", "\t", amount, "\t", self.balance
+        print( "WITHDRAW", "\t", amount, "\t", self.balance)
         return amount
 
 
@@ -42,17 +42,17 @@ try:
         barney += account.withdraw(random.choice([10, 20, 40, 80, 160]))
         wilma += account.withdraw(random.choice([10, 20, 40, 80, 160]))
 except InsufficientFunds as e:
-    print e.message
-    print "Balance", e.balance
-    print "Requested", e.requested
-    print account.balance
+    print( e.args )
+    print( "Balance", e.balance )
+    print( "Requested", e.requested )
+    print( account.balance )
 
 
-print "GAME OVER"
+print( "GAME OVER" )
 
-print "Fred grabbed", fred
-print "Wilma grabbed", wilma
-print "Barney grabbed", barney
+print( "Fred grabbed", fred )
+print( "Wilma grabbed", wilma )
+print( "Barney grabbed", barney )
 
 account.stop()
 account.join()
