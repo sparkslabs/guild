@@ -363,8 +363,8 @@ class Actor(ActorMixin, _Thread):
             g = None
 
         while not self.killflag:
-
-            while (self.F_inbound or self.inbound or self.core):
+            # Next loop also checks for the killflag, since it is likely that the killflag gets set within this loop
+            while (self.F_inbound or self.inbound or self.core) and (not self.killflag):
                 self._actor_do_queued()
 
             if not self._actor_do_queued():
