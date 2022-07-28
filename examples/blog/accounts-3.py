@@ -16,7 +16,7 @@ class Account(Actor):
     @actor_function
     def deposit(self, amount):
         # This is a function to allow the deposit to be confirmed
-        print "DEPOSIT", "\t", amount, "\t", self.balance
+        print("DEPOSIT", "\t", amount, "\t", self.balance)
         self.balance = self.balance + amount
         return self.balance
 
@@ -27,7 +27,7 @@ class Account(Actor):
                                     requested=amount,
                                     balance=self.balance)
         self.balance = self.balance - amount
-        print "WITHDRAW", "\t", amount, "\t", self.balance
+        print("WITHDRAW", "\t", amount, "\t", self.balance)
         return amount
 
 
@@ -49,8 +49,10 @@ class MischiefMaker(Actor):
             grab = random.randint(1, 10) * 10
             transfer(grab, self.friendsaccount, self.myaccount)
         except InsufficientFunds as e:
-            print "Awww, Tapped out", e.balance, "<", e.requested
+            print("----------------------------------------------------------------")
+            print("Awww, Tapped out", e.balance, "<", e.requested, "::", (self.__class__.__name__, id(self)))
             self.stop()
+            print("----------------------------------------------------------------")
             return
         self.grabbed = self.grabbed + grab
 
@@ -69,11 +71,11 @@ account2.stop()
 account1.join()
 account2.join()
 
-print "GAME OVER"
+print("GAME OVER")
 
-print "Fred grabbed", fred.grabbed
-print "Barney grabbed", barney.grabbed
-print "Total grabbed", fred.grabbed + barney.grabbed
-print "Since they stopped grabbing..."
-print "Money left", account1.balance, account2.balance
-print "Ending money", account1.balance + account2.balance
+print("Fred grabbed", fred.grabbed)
+print("Barney grabbed", barney.grabbed)
+print("Total grabbed", fred.grabbed + barney.grabbed)
+print("Since they stopped grabbing...")
+print("Money left", account1.balance, account2.balance)
+print("Ending money", account1.balance + account2.balance)
