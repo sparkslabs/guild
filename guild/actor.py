@@ -375,8 +375,15 @@ class Actor(ActorMixin, _Thread):
         if g:
             try:
                 g.throw(StopIteration)
-            except StopIteration:
-                pass
+            except StopIteration as e:
+                print("THERE", repr(e))
+            except RuntimeError as e:
+                if ( len(e.args)==1) and ( "StopIteration" in e.args[0] ):
+                    # print("expected error")
+                    pass
+                else:
+                    print("Unexpecetd error", repr(e), dir(e))
+                    raise
 
     def stop(self):
         self.killflag = True
