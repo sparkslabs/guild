@@ -234,7 +234,6 @@ class ActorMixin(object):
         super(ActorMixin, self).__init__(*argv, **argd)
 
     def interpret(self, command):
-        # print command
         callback, zelf, argv, argd = command
         if zelf:
             if trace_actor_calls:
@@ -249,7 +248,6 @@ class ActorMixin(object):
                 sys.stderr.write(", ".join([repr(x) for x in command]))
                 sys.stderr.write("\n")
                 sys.stderr.flush()
-                # print "self", self
                 raise
         else:
             result = callback(*argv, **argd)
@@ -374,7 +372,7 @@ class Actor(ActorMixin, _Thread):
                 try:
                     next(g)
                 except StopIteration:
-                    # Print("Generator Exited")
+                    # Generator Exitted
                     self.stop()
                     g = None
         self.onStop()
@@ -385,10 +383,10 @@ class Actor(ActorMixin, _Thread):
                 pass
             except RuntimeError as e:
                 if ( len(e.args)==1) and ( "StopIteration" in e.args[0] ):
-                    # print("expected error")
+                    # Expected error
                     pass
                 else:
-                    print("Unexpecetd error", repr(e), dir(e))
+                    print("Unexpected error", repr(e), dir(e))
                     raise
 
     def stop(self):
