@@ -65,7 +65,7 @@ class MischiefMaker(Actor):
             grab = random.randint(1, 10) * 10
             transfer(grab, self.friendsaccount, self.myaccount)
         except InsufficientFunds as e:
-            print "Awww, Tapped out", e.balance, "<", e.requested
+            print( "Awww, Tapped out", e.balance, "<", e.requested)
             self.stop()
             return
         self.grabbed = self.grabbed + grab
@@ -83,11 +83,11 @@ fred = MischiefMaker(account1, account2, "fred").go()
 wait_for(fred, barney)
 
 
-print "GAME OVER"
+print( "GAME OVER")
 
-print "Fred grabbed", fred.grabbed
-print "Barney grabbed", barney.grabbed
-print "Total grabbed", fred.grabbed + barney.grabbed
-print "Since they stopped grabbing..."
-print "Money left", account1.balance, account2.balance
-print "Ending money", account1.balance + account2.balance
+print( "Fred grabbed", fred.grabbed)
+print( "Barney grabbed", barney.grabbed)
+print( "Total grabbed", fred.grabbed + barney.grabbed)
+print( "Since they stopped grabbing...")
+print( "Money left", account1.balance, account2.balance)
+print( "Ending money", account1.balance + account2.balance)
