@@ -16,7 +16,7 @@ class Follow(Actor):
         self.f = None
 
     def main(self):
-        self.f = f = file(self.filename)
+        self.f = f = open(self.filename)
         f.seek(0, 2)   # seek to end
         while True:
             yield 1
