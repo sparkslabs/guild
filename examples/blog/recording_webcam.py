@@ -49,7 +49,7 @@ class FrameStore(Actor):
     def process_start(self):
         try:
             os.makedirs(self.directory)
-        except OSError, e:
+        except OSError as e:
             if e.errno != 17:
                 raise
 
