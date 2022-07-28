@@ -197,9 +197,6 @@ def actor_function(timeout=None):
 
     return dec
 
-#def actor_function(fn):
-    #return ("ACTORFUNCTION", fn)
-
 def process_method(method):
     return ("PROCESSMETHOD", method)
 
