@@ -56,7 +56,7 @@ def mkactorfunction_wtimeout(func, __fcall_timeout):
         self._actor_notify()
         #e, result = resultQueue.get(True, None)
         try:
-            e, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+            result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
         except _Queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
@@ -64,8 +64,12 @@ def mkactorfunction_wtimeout(func, __fcall_timeout):
             if not self.is_alive():
                 raise ActorNotStartedException
             raise
-        if e:
-            six.reraise(*e)
+        if result_fail:
+            exc_info = result_fail
+            tp, value, tb = result_fail
+            raise value.with_traceback(tb)
+
+
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
         return result
@@ -92,7 +96,7 @@ def mkactorfunction(func):
         self._actor_notify()
         #e, result = resultQueue.get(True, None)
         try:
-            e, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+            result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
         except _Queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
@@ -100,8 +104,11 @@ def mkactorfunction(func):
             if not self.is_alive():
                 raise ActorNotStartedException
             raise
-        if e:
-            six.reraise(*e)
+        if result_fail:
+            exc_info = result_fail
+            tp, value, tb = result_fail
+            raise value.with_traceback(tb)
+
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
         return result
