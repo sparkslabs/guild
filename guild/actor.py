@@ -9,8 +9,7 @@
 from collections import deque as _deque
 from functools import wraps as _wraps
 import logging
-import six
-import queue as _Queue
+import queue
 import sys
 from threading import Thread as _Thread
 import time
@@ -46,7 +45,7 @@ def Print(*args):   #NOTE: Overview documented
     sys.stderr.flush()
 
 def mkactorfunction_wtimeout(func, __fcall_timeout):
-    resultQueue = _Queue.Queue()
+    resultQueue = queue.Queue()
     @_wraps(func)
     def t(self, *args, **argd):
         op = (func, self, args, argd)
@@ -57,7 +56,7 @@ def mkactorfunction_wtimeout(func, __fcall_timeout):
         #e, result = resultQueue.get(True, None)
         try:
             result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
-        except _Queue.Empty:
+        except queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
             # which and raise appropriately
@@ -85,7 +84,7 @@ def mkactormethod(func):
     return t
 
 def mkactorfunction(func):
-    resultQueue = _Queue.Queue()
+    resultQueue = queue.Queue()
 
     @_wraps(func)
     def t(self, __fcall_timeout=5, *args, **argd):
@@ -97,7 +96,7 @@ def mkactorfunction(func):
         #e, result = resultQueue.get(True, None)
         try:
             result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
-        except _Queue.Empty:
+        except queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
             # which and raise appropriately
@@ -216,8 +215,7 @@ def late_bind_safe(method):
     return ("LATEBINDSAFE", method)
 
 
-@six.add_metaclass(ActorMetaclass)
-class ActorMixin(object):
+class ActorMixin(metaclass=ActorMetaclass):
     """Actor mixin base class.
 
     Provides partial implementation of a guild actor. Use with a
