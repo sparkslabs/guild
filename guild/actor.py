@@ -121,6 +121,8 @@ def mkprocessmethod(func):
         x = func(self)
         if x == False:
             return
+        if self.killflag:
+            return
         self.core.append((s, self, (), {}))
     return s
 
