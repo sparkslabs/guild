@@ -37,6 +37,8 @@ class AudioCapture(Actor):
         CHUNK = 2048
         FORMAT = pyaudio.paInt16
         RECORD_SECONDS = 5
+        RATE = 44100
+        CHANNELS = 1
 
         device_count = p.get_device_count()
 
@@ -46,23 +48,21 @@ class AudioCapture(Actor):
             info = p.get_device_info_by_index(i)
             devices[info["name"]] = info
 
-        #
-        # Look for the USB device with ID "0x46d:0x825"
-        # Again, highly specific with good reason.
-        #
-        device_names = [x for x in devices.keys() if (("USB" in x) and ("0x46d:0x825" in x))]
+        #pprint.pprint(devices)
 
-        device = devices[device_names[0]]
+        #device_names = [x for x in devices.keys() if (("USB" in x) and ("0x46d:0x825" in x))]
 
-        RATE = int(device.get("defaultSampleRate", 44100))
-        CHANNELS = int(device.get("maxInputChannels", 2))
-        DEVICE_INDEX = int(device.get("index", 0))
+        #device = devices[device_names[0]]
+
+#        RATE = int(device.get("defaultSampleRate", 44100))
+#        CHANNELS = int(device.get("maxInputChannels", 2))
+#        DEVICE_INDEX = int(device.get("index", 0))
 
         stream = p.open(format=FORMAT,
                         channels=CHANNELS,
                         rate=RATE,
                         input=True,
-                        input_device_index=DEVICE_INDEX,
+#                        input_device_index=DEVICE_INDEX,
                         frames_per_buffer=CHUNK)
 
         print("* recording")
@@ -92,7 +92,7 @@ class WaveWriter(Actor):
         self.CHANNELS = 1
         self.FORMAT = pyaudio.paInt16
         self.WAVE_OUTPUT_FILENAME = "output.wav"
-        self.RATE = 48000
+        self.RATE = 44100
 
         super(WaveWriter, self).__init__()
 
