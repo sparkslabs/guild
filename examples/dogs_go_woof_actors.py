@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 
 from guild.actor import Actor, actor_method, process_method, late_bind
 
