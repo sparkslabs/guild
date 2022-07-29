@@ -19,11 +19,12 @@ a Qt thread.
 
 import six
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .actor import ActorMixin, ActorMetaclass, actor_method
 
-class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
+# class _QtActorMixinMetaclass(QtCore.pyqtWrapperType, ActorMetaclass):
+class _QtActorMixinMetaclass(type(QtCore.QObject), ActorMetaclass):
     pass
 
 
@@ -43,7 +44,7 @@ class QtActorMixin(ActorMixin):
             }
         self._qtactor_gen = None
         # if not a Widget, move to a Qt thread
-        if isinstance(self, QtGui.QWidget):
+        if isinstance(self, QtWidgets.QWidget):
             # widgets can't be moved to another thread
             self._qtactor_thread = None
         else:

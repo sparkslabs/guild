@@ -21,7 +21,7 @@ import time
 
 from guild.actor import *
 from guild.qtactor import ActorSignal, QtActorMixin
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 def VideoFileReader(file_name):
     # get video dims
@@ -112,13 +112,13 @@ class PlayerQt(QtActorMixin, QtCore.QObject):
     def onStop(self):
         self.reader.close()
 
-class Display(QtGui.QLabel):
+class Display(QtWidgets.QLabel):
     @QtCore.pyqtSlot(QtGui.QImage)
     def show_frame(self, frame):
         pixmap = QtGui.QPixmap.fromImage(frame)
         self.setPixmap(pixmap)
 
-class DisplayActor(QtActorMixin, QtGui.QLabel):
+class DisplayActor(QtActorMixin, QtWidgets.QLabel):
     @actor_method
     def show_frame(self, frame):
         pixmap = QtGui.QPixmap.fromImage(frame)
@@ -126,7 +126,7 @@ class DisplayActor(QtActorMixin, QtGui.QLabel):
 
     input = show_frame
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, video_file):
         super(MainWindow, self).__init__()
         self.setWindowTitle("Guild video player")
@@ -152,19 +152,19 @@ class MainWindow(QtGui.QMainWindow):
 ##        self.actors = [self.player, bridge]
 
         # central widget
-        widget = QtGui.QWidget()
-        grid = QtGui.QGridLayout()
+        widget = QtWidgets.QWidget()
+        grid = QtWidgets.QGridLayout()
         grid.setColumnStretch(4, 1)
         widget.setLayout(grid)
         self.setCentralWidget(widget)
         grid.addWidget(display, 0, 0, 1, 6)
         # pause button
-        pause_button = QtGui.QCheckBox('pause')
+        pause_button = QtWidgets.QCheckBox('pause')
         pause_button.clicked.connect(self.player.set_paused)
         pause_button.setShortcut('Space')
         grid.addWidget(pause_button, 1, 0)
         # quit button
-        quit_button = QtGui.QPushButton('quit')
+        quit_button = QtWidgets.QPushButton('quit')
         quit_button.clicked.connect(self.shutdown)
         quit_button.setShortcut('Ctrl+Q')
         grid.addWidget(quit_button, 1, 5)
@@ -173,11 +173,11 @@ class MainWindow(QtGui.QMainWindow):
     def shutdown(self):
         stop(*self.actors)
         wait_for(*self.actors)
-        QtGui.QApplication.instance().quit()
+        QtWidgets.QApplication.instance().quit()
 
 if len(sys.argv) != 2:
     print('usage: %s video_file' % sys.argv[0])
     sys.exit(1)
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 main = MainWindow(sys.argv[1])
 app.exec_()
