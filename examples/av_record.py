@@ -1,4 +1,12 @@
 #!/usr/bin/python
+#
+# In order for pyaudio to work (as used by AudioCapture/etc), you need to install it
+# You can do this for ubuntu as
+# sudo apt install python3-pyaudio
+# 
+# This also requires portaudio19 to be installed, or else you get some very cryptic messages:
+#
+# sudo apt-get install portaudio19-dev
 
 import time
 
