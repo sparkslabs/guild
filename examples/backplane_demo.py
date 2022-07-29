@@ -25,7 +25,7 @@ time.sleep(1)
 pub = PublishTo("HELLO")
 sub = SubscribeTo("HELLO")
 
-print "pub", pub, repr(pub), pub.input
+print("pub", pub, repr(pub), pub.input)
 
 pipeline(p, pub)
 pipeline(sub, pr)
