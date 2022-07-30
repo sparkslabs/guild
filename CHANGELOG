@@ -6,6 +6,19 @@ reason.
 
 ## [NEXT] - YYYY-MM-DD
 
+## [1.3.6] - 
+
+Bumped minor version number to 3 since we have dropped python 2 support. 
+The reason why the major version number hasn't changed is because the API
+has not changed for python 3 users (yet).  However the API being no longer
+available for py2 users is a breaking change, so the version number should
+be bumped. 
+
+This means that should I need to have security fixes for py2 I can start a
+1.2.x version tree, and versions less than 1.2 can be applied for py2 by
+simply searching for VER <= 1.3.0
+
+
 ## [1.1.6] - 2021-09-04
 
 Version bumped to keep ppa packaging happy.
