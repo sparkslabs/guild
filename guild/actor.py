@@ -15,6 +15,9 @@ from threading import Thread as _Thread
 import time
 import sys
 import inspect
+from guild.promise import Promise, PromiseAPI
+
+from guild.exceptions import *
 
 __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "actor_method", "actor_function", "process_method",
@@ -27,17 +30,6 @@ __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
 strace = False  #NOTE: Overview documented
 trace_actor_calls = False
 
-class UnboundActorMethod(Exception): #NOTE: Overview documented
-    pass
-
-class ActorNotStartedException(Exception): #NOTE: Overview documented
-    pass
-
-
-class ActorException(Exception):   #NOTE: Overview documented
-    def __init__(self, *argv, **argd):
-        super(ActorException, self).__init__(*argv)
-        self.__dict__.update(argd)
 
 def Print(*args):   #NOTE: Overview documented
     sys.stderr.write(" ".join([str(x) for x in args]))
@@ -45,17 +37,18 @@ def Print(*args):   #NOTE: Overview documented
     sys.stderr.flush()
 
 def mkactorfunction_wtimeout(func, __fcall_timeout):
-    resultQueue = queue.Queue()
+    promise = Promise()
+
     @_wraps(func)
     def t(self, *args, **argd):
         op = (func, self, args, argd)
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
-        self.F_inbound.append((op, resultQueue))
+        self.F_inbound.append((op, promise))
         self._actor_notify()
-        #e, result = resultQueue.get(True, None)
+        #e, result = promise.queue.get(True, None)
         try:
-            result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+            result_fail, result = promise.queue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
         except queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
@@ -72,6 +65,20 @@ def mkactorfunction_wtimeout(func, __fcall_timeout):
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
         return result
+    return t
+
+def mkactorfunction_promise(func, __fcall_timeout):
+    @_wraps(func)
+    def t(self, *args, **argd):
+        promise = Promise()
+        promise.promiser = self
+        op = (func, self, args, argd)
+        if strace:                                          # EXPERIMENTAL
+            Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
+        self.F_inbound.append((op, promise))
+        self._actor_notify()
+        return promise
+
     return t
 
 def mkactormethod(func):
@@ -83,35 +90,6 @@ def mkactormethod(func):
         self._actor_notify()
     return t
 
-def mkactorfunction(func):
-    resultQueue = queue.Queue()
-
-    @_wraps(func)
-    def t(self, __fcall_timeout=5, *args, **argd):
-        op = (func, self, args, argd)
-        if strace:                                          # EXPERIMENTAL
-            Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
-        self.F_inbound.append((op, resultQueue))
-        self._actor_notify()
-        #e, result = resultQueue.get(True, None)
-        try:
-            result_fail, result = resultQueue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
-        except queue.Empty:
-            # The function call timed out. This could be a problem
-            # with the actor or it might not have been started. Check
-            # which and raise appropriately
-            if not self.is_alive():
-                raise ActorNotStartedException
-            raise
-        if result_fail:
-            exc_info = result_fail
-            tp, value, tb = result_fail
-            raise value.with_traceback(tb)
-
-        if strace:                                          # EXPERIMENTAL
-            Print("strace:ACTORFUNCTION result", result)    # EXPERIMENTAL
-        return result
-    return t
 
 def mkprocessmethod(func):
     @_wraps(func)
@@ -147,6 +125,7 @@ def mklatebindsafe(func):
 class ActorMetaclass(type):   #NOTE: Overview documented
     def __new__(cls, clsname, bases, dct):
         new_dct = {}
+        promise_dct = {}
         inboxes = {}
         outboxes = {}
         for name, val in dct.items():
@@ -154,16 +133,14 @@ class ActorMetaclass(type):   #NOTE: Overview documented
             if val.__class__ == tuple and len(val) == 3:
                 tag, fn, arg = str(val[0]), val[1], val[2]
                 if tag.startswith("ACTORFUNCTION"):
-                    new_dct[name] = mkactorfunction_wtimeout(fn,arg)
+                    new_dct[name] = mkactorfunction_wtimeout(fn, arg)
+                    promise_dct[name] = mkactorfunction_promise(fn, arg)
 
             if val.__class__ == tuple and len(val) == 2:
                 tag, fn = str(val[0]), val[1]
                 if tag.startswith("ACTORMETHOD"):
                     inboxes[fn.__name__] = fn.__doc__
                     new_dct[name] = mkactormethod(fn)
-
-                elif tag.startswith("ACTORFUNCTION"):
-                    new_dct[name] = mkactorfunction(fn)
 
                 elif tag.startswith("PROCESSMETHOD"):
                     new_dct[name] = mkprocessmethod(fn)
@@ -176,6 +153,7 @@ class ActorMetaclass(type):   #NOTE: Overview documented
                     outboxes[fn.__name__] = fn.__doc__
                     new_dct[name] = mklatebindsafe(fn)
 
+        new_dct["_promise_dct"] = promise_dct
         new_dct["Inboxes"] = inboxes
         new_dct["Outboxes"] = outboxes
         return type.__new__(cls, clsname, bases, new_dct)
@@ -226,6 +204,7 @@ class ActorMixin(metaclass=ActorMetaclass):
     """
 
     def __init__(self, *argv, **argd):
+        self.promise = PromiseAPI(self)
         self.inbound = _deque()
         self.F_inbound = _deque()
         self.core = _deque()
@@ -310,7 +289,7 @@ class ActorMixin(metaclass=ActorMetaclass):
                 self.stop()
 
         if self.F_inbound:
-            command, result_queue = self.F_inbound.popleft()
+            command, promise = self.F_inbound.popleft()
             result = None
             result_fail = 0
             try:
@@ -318,7 +297,7 @@ class ActorMixin(metaclass=ActorMetaclass):
             except Exception:
                 result_fail = sys.exc_info()
 
-            result_queue.put_nowait((result_fail, result))
+            promise.queue.put_nowait((result_fail, result))
 
         if self.core:
             command = self.core.popleft()
