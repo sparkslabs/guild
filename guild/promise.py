@@ -15,7 +15,10 @@ class Promise:
         self.timeout = timeout
 
     def ready(self):
-        return not self.queue.empty()
+        if self.queue:
+            return not self.queue.empty()
+        else:
+            return False # Could raise an exception instead?
 
     def unwrap(self):
         "Blocks on this particular queue"
@@ -34,6 +37,10 @@ class Promise:
             raise value.with_traceback(tb)
         return result
 
+    def cancel(self):
+        self.queue = None # Throw away the queue - which cancels the request
+
+
 def wait_all(*promises):
     while not all([x.ready() for x in promises]):
         time.sleep(0.001)
@@ -41,6 +48,11 @@ def wait_all(*promises):
 def wait_any(*promises):
     while not any([x.ready() for x in promises]):
         time.sleep(0.001)
+
+def cancel(*promises):
+    for promise in promises:
+        promise.cancel()
+
 
 class PromiseAPI:
     def __init__(self, promiser=None):

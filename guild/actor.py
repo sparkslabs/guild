@@ -44,11 +44,17 @@ def mkactorfunction_wtimeout(func, __fcall_timeout):
         op = (func, self, args, argd)
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
-        self.F_inbound.append((op, promise))
-        self._actor_notify()
-        #e, result = promise.queue.get(True, None)
+        if promise.queue:
+            self.F_inbound.append((op, promise))
+            self._actor_notify()
+        else:
+            raise JobCancelled(self, op)
+
         try:
             result_fail, result = promise.queue.get(True, __fcall_timeout) # 5 seconds means pretty non-responsive.
+        except AttributeError:
+            # Queue was deleted during the above block
+            raise JobCancelled(self, op)
         except queue.Empty:
             # The function call timed out. This could be a problem
             # with the actor or it might not have been started. Check
@@ -75,8 +81,13 @@ def mkactorfunction_promise(func, __fcall_timeout):
         op = (func, self, args, argd)
         if strace:                                          # EXPERIMENTAL
             Print("strace:ACTORFUNCTION args", op)          # EXPERIMENTAL
-        self.F_inbound.append((op, promise))
-        self._actor_notify()
+        if promise.queue:
+            self.F_inbound.append((op, promise))
+            self._actor_notify()
+        else:  # Job cancelled already!
+            raise JobCancelled(self, op)
+
+
         return promise
 
     return t
@@ -290,14 +301,20 @@ class ActorMixin(metaclass=ActorMetaclass):
 
         if self.F_inbound:
             command, promise = self.F_inbound.popleft()
-            result = None
-            result_fail = 0
-            try:
-                result = self.interpret(command)
-            except Exception:
-                result_fail = sys.exc_info()
+            if promise.queue: # May have been cancelled between call and now
+                result = None
+                result_fail = 0
+                try:
+                    result = self.interpret(command)
+                except Exception:
+                    result_fail = sys.exc_info()
+            else:
+                raise JobCancelled(self, command)
 
-            promise.queue.put_nowait((result_fail, result))
+            if promise.queue:
+                promise.queue.put_nowait((result_fail, result))
+            else:
+                raise JobCancelled(self, command)
 
         if self.core:
             command = self.core.popleft()
