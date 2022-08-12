@@ -410,6 +410,17 @@ pipelines and backplanes.
 
 If you find it useful or spot a typo, please let me know.
 
+### C++ Guild Version?
+
+On and off over the past few years I've done a few sketches regarding ideas
+around a C++ version of guild. I've got some fairly solid ideas now which
+are likely to get worked up now over time. This may be days, weeks, months
+or even years. Howevever it's a start.
+
+The origin of that work was my pyxie compiler, with the desire not to be
+writing code in python that couldn't have a direct route to compilation into
+C++. See the sketches if curious.
+
 ### License
 
 Note the license of guild is the Apache 2 license. This is not compatible with
