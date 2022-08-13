@@ -253,6 +253,8 @@ class Collection(dict):
 
     Again, you do not instantiate these yourself
     """
+    def make_snapshot(self):
+        self.isSnapshot = True
     def set_store(self, store):
         """ Set the store to associate the collection with """
         self.store = store
@@ -275,6 +277,26 @@ class Collection(dict):
         else:
             super(Collection, self).__setattr__(key, value)
 
+    def pull_updates(self):
+        if self.isSnapshot:
+            new_snapshot = self.store.snapshot()
+            curr_keys = self.keys()
+            new_keys = new_snapshot.keys()
+
+            updates = set()
+            for key in new_keys:
+                if key not in curr_keys:
+                    self[key] = self.store.usevar(key)
+                    updates.add(self[key])
+
+                if new_snapshot[key].version > self[key].version:
+                    self[key] = new_snapshot[key]
+                    updates.add(self[key])
+
+            return updates
+        else:
+            return []
+        return []
 
 class Store(object):
     """
@@ -441,6 +463,7 @@ class Store(object):
 
     def snapshot(self):
         D = self.using(*self.names())
+        D.make_snapshot()
         return D
 
     def export(self, names = None):
