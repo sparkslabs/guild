@@ -54,6 +54,8 @@ import pygame
 from guild.actor import *
 from guild.stm import Store, ConcurrentUpdate, BusyRetry, Value
 
+# This next line is useful to get SDL to play nicely with Plasma under Linux
+# It's not necessary generally, but makes pygame play nicer on my system
 os.environ["SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR"] = "0"
 
 class SurfaceValue(Value):
