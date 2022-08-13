@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+from random import randint
+import random
+
 import pygame
 import time
 import guild
@@ -35,8 +38,6 @@ class Display(Actor):
       return surface
 
 
-from random import randint
-import random
 
 class Ticker(Actor):
     def __init__(self, size, location):
