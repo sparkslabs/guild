@@ -107,7 +107,11 @@ def mkprocessmethod(func):
     def s(self, *args, **argd):
         if strace:                                          # EXPERIMENTAL
             Print("strace:PROCESSMETHOD", func, args, argd) # EXPERIMENTAL
-        x = func(self)
+        try:
+            x = func(self)
+        except Exception as e:
+            self.killflag = True
+            raise
         if x == False:
             return
         if self.killflag:
