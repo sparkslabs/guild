@@ -178,6 +178,10 @@ class MischiefMaker(Actor):
             print( "Awww, Tapped out", e.balance, "<", e.requested )
             self.stop()
             return
+        except RetryTimeoutExceeded as e:
+            print("Timed out withdrawing for whatever reason?", self, e)
+            self.stop()
+            return
         self.grabbed = self.grabbed + grab
 
 
