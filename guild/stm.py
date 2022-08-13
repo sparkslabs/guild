@@ -230,13 +230,16 @@ class Value(object):
         """ Commit a new version of the value to the store """
         self.store.set(self.key, self)
 
+    def copy_value(self, value):
+        return copy.deepcopy(value)
+
     def clone(self):
         """ Returns a clone of the value """
         if isinstance(self.value, Actor):
-            return Value(self.version, self.value, self.store, self.key)
+            return (self.__class__)(self.version, self.value, self.store, self.key)
         # otherwise...
-        return Value(self.version,
-                     copy.deepcopy(self.value),
+        return (self.__class__)(self.version,
+                     self.copy_value(self.value),
                      self.store,
                      self.key)
 
@@ -280,11 +283,12 @@ class Store(object):
 
     You instantiate this as per the documentation for this module
     """
-    def __init__(self):
+    def __init__(self, valuetype=Value):
         self.store = {}                # Threadsafe
         self.lock = threading.Lock()
 
         self.last_update = time.time() # Readonly
+        self.valuetype = valuetype
 
     # ////---------------------- Direct access -----------------------\\\\
     # Let's make this lock free, and force the assumption that to do
@@ -302,20 +306,16 @@ class Store(object):
     # Writes Store Value - need to prevent multiple concurrent write
     def __make(self, key):
         """ Create a new key-value pair.  Not thread-safe """
-        self.store[key] = Value(0, None, self, key)
+        self.store[key] = (self.valuetype)(0, None, self, key)
 
     # Writes Store Value  - need to prevent multiple concurrent write
     def __do_update(self, key, value):
         """
         Update a key-value pair and increment the version.  Not thread-safe
         """
-        if isinstance(value.value, Actor):
-            self.store[key] = Value(value.version + 1, value.value, self, key)
-        else:
-            self.store[key] = Value(value.version + 1,
-                                    copy.deepcopy(value.value),
-                                    self, key)
-        value.version = value.version + 1
+        newvalue = value.clone()
+        newvalue.version = newvalue.version + 1
+        self.store[key] = newvalue
 
     # Reads Store Value - possibly thread safe, depending on VM implementation
     def __can_update(self, key, value):
