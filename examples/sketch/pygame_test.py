@@ -44,16 +44,16 @@ Each flicker actor:
 
 """
 
+import os
 from random import randint
 import random
+import time
 
 import pygame
-import time
-import guild
+
 from guild.actor import *
 from guild.stm import Store, ConcurrentUpdate, BusyRetry, Value
 
-import os
 os.environ["SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR"] = "0"
 
 class SurfaceValue(Value):
@@ -169,6 +169,8 @@ class Flicker(Actor):
         self.surface = self.tracked_surface.value[0]
 
 if __name__ == "__main__":
+    import guild
+
     display = Display()
     guild.init()
     guild.register("display", display)
