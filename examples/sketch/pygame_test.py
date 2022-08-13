@@ -83,21 +83,21 @@ class Display(Actor):
         self.surface_store = Store(valuetype=SurfaceValue)
 
     def main(self):
-      self.displaysize = 800,600
-      self.display = pygame.display.set_mode(self.displaysize)
-      snapshot = self.surface_store.snapshot()
+        self.displaysize = 800,600
+        self.display = pygame.display.set_mode(self.displaysize)
+        snapshot = self.surface_store.snapshot()
 
-      while True:
-        pygame.display.flip()
+        while True:
+            pygame.display.flip()
 
-        updates = snapshot.pull_updates()
-        if len(updates) >0:
-              print("LENGTH UPDATES", len(updates))
-              for item in updates:
-                  surface, location = item.value
-                  self.display.blit(surface, location)
-        time.sleep(0.001) # Stupidly small wait time to ensure we see a length < 4 for this example
-        yield 1
+            updates = snapshot.pull_updates()
+            if len(updates) >0:
+                  print("LENGTH UPDATES", len(updates))
+                  for item in updates:
+                      surface, location = item.value
+                      self.display.blit(surface, location)
+            time.sleep(0.001) # Stupidly small wait time to ensure we see a length < 4 for this example
+            yield 1
 
     def onStop(self):
         # close the display?
