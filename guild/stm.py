@@ -228,7 +228,8 @@ class Value(object):
 
     def commit(self):
         """ Commit a new version of the value to the store """
-        self.store.set(self.key, self)
+        newvalue = self.store.set(self.key, self)
+        return newvalue
 
     def copy_value(self, value):
         return copy.deepcopy(value)
@@ -316,6 +317,7 @@ class Store(object):
         newvalue = value.clone()
         newvalue.version = newvalue.version + 1
         self.store[key] = newvalue
+        return newvalue
 
     # Reads Store Value - possibly thread safe, depending on VM implementation
     def __can_update(self, key, value):
@@ -365,7 +367,7 @@ class Store(object):
         if locked:
             try:
                 if self.__can_update(key, value):
-                    self.__do_update(key, value)
+                    newvalue = self.__do_update(key, value)
                     HasBeenSet = True
             finally:
                 self.lock.release()
@@ -375,6 +377,7 @@ class Store(object):
             raise ConcurrentUpdate
 
         self.last_update = time.time()
+        return newvalue
 
     # \\\\----------------- Single Value Mediation ------------------////
 
