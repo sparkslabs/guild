@@ -120,7 +120,7 @@ class Account2(object):
         return new_balance
 
 #    @retry(max_tries=100)        # Try up to 100 times - maybe should be a timeout?
-    @retry(timeout=0.004)        # Timeout after 5 milliseconds (Are we really that worried?)
+    @retry(timeout=0.005)        # Timeout after 5 milliseconds (Are we really that worried?)
     def withdraw(self, amount):
         curr_balance = self.account_info.checkout("balance")
         print( "ATTEMPT WITHDRAW", amount, self, curr_balance )
