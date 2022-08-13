@@ -23,7 +23,7 @@ __all__ = ["Actor", "ActorMixin", "ActorMetaclass",
            "actor_method", "actor_function", "process_method",
            "late_bind", "UnboundActorMethod", "ActorException",
            "ActorNotStartedException",
-           "late_bind_safe", "pipe", "wait_for", "stop", "pipeline",
+           "late_bind_safe", "pipe", "wait_for", "join", "stop", "pipeline",
            "wait_KeyboardInterrupt", "start"]
 
 
@@ -405,6 +405,10 @@ def pipeline(*actors):
 
 
 def wait_for(*actors):
+    for p in actors:
+        p.join()
+
+def join(*actors):
     for p in actors:
         p.join()
 
