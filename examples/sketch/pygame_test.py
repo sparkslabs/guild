@@ -31,11 +31,14 @@ class Display(Actor):
         # close the display?
         pass
 
+    def track(self, surface, location):
+        self.tracking.append((surface, location))
+
     @actor_function
     def get_surface(self, size, location):
-      surface = pygame.Surface( self.displaysize )
-      self.tracking.append((surface, location))
-      return surface
+        surface = pygame.Surface( size )
+        self.track(surface, location)
+        return surface
 
 
 class Flicker(Actor):
