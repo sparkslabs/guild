@@ -337,7 +337,7 @@ class Store(object):
         """
         locked = islocked
         if not locked:
-            locked = self.lock.acquire(0)
+            locked = self.lock.acquire(blocking=False)
         result = None
         if locked:
             try:
