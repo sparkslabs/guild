@@ -38,10 +38,9 @@ class Display(Actor):
       return surface
 
 
-
-class Ticker(Actor):
+class Flicker(Actor):
     def __init__(self, size, location):
-        super(Ticker,self).__init__()
+        super(Flicker,self).__init__()
         self.size = size
         self.location = location
 
@@ -89,22 +88,20 @@ if __name__ == "__main__":
     display = Display()
     guild.init()
     guild.register("display", display)
-    ticker = Ticker((300,200),(50,100))
-    ticker2 = Ticker((300,200),(400,100))
-    ticker3 = Ticker((300,200),(50,350))
-    ticker4 = Ticker((300,200),(400,350))
-    display.start()
-    ticker.start()
-    ticker2.start()
-    ticker3.start()
-    ticker4.start()
-    time.sleep(60)
+    rects = [
+                ((300,200),(50,100)),
+                ((300,200),(400,100)),
+                ((300,200),(50,350)),
+                ((300,200),(400,350))
+            ]
 
-    ticker.stop()
-    ticker2.stop()
-    ticker3.stop()
-    ticker4.stop()
-    display.stop()
-    ticker.join()
-    ticker2.join()
-    display.join()
+    flickers = []
+    for pos, size in rects:
+        flickers.append( Flicker(pos, size) )
+
+    start(display,*flickers)
+
+    time.sleep(10)
+
+    stop(display, *flickers)
+    join(display,*flickers)
