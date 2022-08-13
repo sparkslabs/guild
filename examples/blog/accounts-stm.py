@@ -107,13 +107,23 @@ class Account2(object):
     def __init__(self, balance=10):
         self.account_info = Store()
 
-        curr_balance = self.account_info.checkout("balance")
+        curr_balance = self.get_balance_checkout()
         curr_balance.set(balance)
         curr_balance.commit()
 
+    def get_balance_checkout(self):
+        success = False
+        while not success:
+            try:
+                curr_balance = self.account_info.checkout("balance")
+                success = True
+            except BusyRetry:
+                pass
+        return curr_balance
+
     @retry                    # Retries until transaction succeeds
     def deposit(self, amount):
-        curr_balance = self.account_info.checkout("balance")
+        curr_balance = self.get_balance_checkout()
         new_balance = curr_balance.value + amount
         curr_balance.set(new_balance)
         curr_balance.commit()
@@ -122,7 +132,7 @@ class Account2(object):
 #    @retry(max_tries=100)        # Try up to 100 times - maybe should be a timeout?
     @retry(timeout=0.005)        # Timeout after 5 milliseconds (Are we really that worried?)
     def withdraw(self, amount):
-        curr_balance = self.account_info.checkout("balance")
+        curr_balance = self.get_balance_checkout()
         print( "ATTEMPT WITHDRAW", amount, self, curr_balance )
         if curr_balance.value < amount:
             raise InsufficientFunds("Insufficient Funds in your account",
@@ -136,7 +146,7 @@ class Account2(object):
 
     @property
     def balance(self):
-        curr_balance = self.account_info.checkout("balance")
+        curr_balance = self.get_balance_checkout()
         return curr_balance.value
 
 
