@@ -113,6 +113,7 @@ def mkprocessmethod(func):
             self.killflag = True
             raise
         if x == False:
+            self.killflag = True # Exitting - make sure thread stops
             return
         if self.killflag:
             return
