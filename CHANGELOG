@@ -18,6 +18,92 @@ This means that should I need to have security fixes for py2 I can start a
 1.2.x version tree, and versions less than 1.2 can be applied for py2 by
 simply searching for VER <= 1.3.0
 
+* New features
+  - Initial version of the promises API
+     * guild.promise - core code
+     * guild.exceptions - extracted out for clarity
+     * guild.actor - uses promises in actor functions by default, extensions
+       to provide a mechanism for using any regular actor function as a
+       promise instead of blocking
+  - Allow promises to be cancelled before execution
+  - Allow an STM store to have specific custom values.  The reason behind
+    this is to allow correct copying of things like SDL/pygame surfaces
+  - When committing a value to the STM you can now recieve a copy back of
+    the updated value
+
+  - An STM snapshot (checkout of values) can now pull updated versions from
+    the STM Store.  This is ala a git pull - the changes are fetched and
+    merged into your snapshot.  You *also* get a list of the values that
+    have changed.
+
+  - Update examples/sketch/pygame_test to be completely threadsafe, by using
+    the new features of the STM:
+      * To use a custom Value type for copying surfaces - SurfaceValue
+      * to push values into the store.
+      * To store requests surfaces in an STM store not a list
+      * Uses the pull_updates method to update its local checkout (which
+        will change when clients push changes to their surfaces).  This also
+        is used for updating the display when surfaces change.
+      * This means the pygame_test is quickly becoming an exemplar on how
+        the STM can and should be used
+
+* New experimental things
+  - Experimental sketches from guildpp merged into this codebase.  (Work
+    towards a currently hypothetical C++ implementation of guild)
+    (This is stuff from 2019 through 2022)
+
+* Deprecate use of "gen_process" over "main", including changing the
+  following to use main:
+
+  - guild.av.AudioCapture
+  - guild.av.WebCamTest
+  - guild.network.Selector
+  - Docs: README.md, setup.py, site/src/index.html
+  - guild.qtactor.QtActorMixin
+  - examples/qt_video_player.Player
+  - examples/99bottles.Follow
+  - examples/blog/log_watcher.Follow
+  - examples/blog/recording_webcam.Camera
+  - examples/sketch/pygame_test.Display
+
+* Python3 related updates:
+   * quild.actor stop & exception handing updated
+   * examples/99bottles.Follow file handing updated
+   * Diched used of "six" - remove python2 support
+   * examples/blog/accounts-[1,2,3].py - largedly print related(!)
+   * examples/blog/accounts-stm-[1,2,3].py - largedly print related(!)
+   * examples/blog/accounts-stm.py - largedly print related(!)
+   * examples/blog/log_watcher - use "open" not "file"
+   * examples/blog/recording_webcam - exceptions
+   * examples/backplane_demo - print function
+   * examples/dogs_go_woof_actors.py - remove future import
+   * guild.stm.Store - locking updated to match changed API in py3.2
+
+* Other updates:
+   * guild.qtactor and examples/qu_video_player updated to Qt5
+   * examples/sketch/pygame_test
+      - Restructured code re tracking of surfaces
+      - Then much later, lots of updates to use new features (see above)
+
+* Code Cleanups
+   * Callback maker functions (eg @actor_method) extracted from inline
+   * Remove race hazard in shutdown of process_method actors
+   * Ensure process_method actors stop if there's any exception raised
+     withing them
+   * process_methods stopped from rescheduling when stopping
+   * process_methods set to stopped when they exit
+   * fix examples/sketch/pygame_test to run flicker free, and cleanly under
+     plasma/KDE
+   * Minor change to guild.av.AudioCapture to improve capture quality &
+     flexibility
+   * example/av_record.py updates to list required libraries
+   * Old version of actor_function removed
+   * examples/blog/accounts-stm.py
+      - Make timeout time match comment
+      - Account checkout pulled into a separate function
+      - Handle retry exception
+   * Add join (synonym for wait_for) since like start() it matches the
+     thread API
 
 ## [1.1.6] - 2021-09-04
 
