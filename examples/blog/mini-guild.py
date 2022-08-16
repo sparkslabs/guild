@@ -7,7 +7,7 @@ Has actor_methods and late bound methods.
 """
 
 class Actor:
-    Behaviour = None # Should be a subclass of Activity
+    Behaviour = None # Override with your behaviour, doesn't have to be a special class
     def __init__(self, *args, **argd):
         super(Actor, self).__init__()
         if self.Behaviour is None:
