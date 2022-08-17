@@ -37,12 +37,12 @@ class Actor:
             if name in self.Behaviour.__dict__:
                 setattr(self, name, mkActorMethod(self, name))
         self._behaviour.become = self.become
+        if not hasattr(self._behaviour, "tick"):
+            self._behaviour.tick = lambda *args: None
 
     def become(self, behaviour_class):
         self.Behaviour = behaviour_class
         self.initialiseBehaviour(*self.args, **self.argd)
-        if not hasattr(self._behaviour, "tick"):
-            self._behaviour.tick = lambda *args: None
 
     def start(self):
         self.greenthread = self.main()
