@@ -87,6 +87,25 @@ class Actor:
         self.sleeping = False
 
 
+class Scheduler:
+    def __init__(self):
+        self.actors = []
+
+    def schedule(self, *actors):
+        for actor in actors:
+            actor.start()
+            self.actors.append(actor)
+
+    def run(self):
+        while len(self.actors) > 0:
+            nactors = []
+            for actor in self.actors:
+                actor.tick()
+                if actor.isactive():
+                    nactors.append(actor)
+            self.actors = nactors
+
+
 class API:
     """"Not technically needed in this version (remnants of "`Activity` actor"""
     def input(self, data):
@@ -148,9 +167,7 @@ class Door(Actor):
 
 if __name__ == "__main__":
 
-    p = Producer("Hello").start()
-    c = Consumer().start()
-    d = Door().start()
+    d = Door()
 
     d.open()
     d.open()
@@ -158,25 +175,14 @@ if __name__ == "__main__":
     d.close()
     d.open()
     d.open()
-    d.tick()
-    d.tick()
-    d.tick()
-    d.tick()
-    d.tick()
-    d.tick()
+
+    s = Scheduler()
+    p = Producer("Hello")
+    c = Consumer()
+
+    s.schedule(p, c, d)
 
     p.link("output", c.munch)
+    s.run()
 
-    x = 0
-
-    # Manual scheduler
-
-    p.tick()
-    c.tick()
-    while p.isactive() and c.isactive():
-        p.tick()
-        c.tick()
-        x +=1
-        if x > 10:
-            p.stop()
-            c.stop()
+    print(c.inputqueue)
