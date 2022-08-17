@@ -88,8 +88,9 @@ class Actor:
 
 
 class Scheduler:
-    def __init__(self):
+    def __init__(self, maxrun=None):
         self.actors = []
+        self.maxrun = maxrun
 
     def schedule(self, *actors):
         for actor in actors:
@@ -97,12 +98,20 @@ class Scheduler:
             self.actors.append(actor)
 
     def run(self):
+        if self.maxrun:
+            ticks = 0
+
         while len(self.actors) > 0:
             nactors = []
+            if self.maxrun:
+                ticks +=1
             for actor in self.actors:
                 actor.tick()
                 if actor.isactive():
                     nactors.append(actor)
+            if self.maxrun and (ticks >= self.maxrun):
+                actor.stop()
+
             self.actors = nactors
 
 
@@ -176,7 +185,7 @@ if __name__ == "__main__":
     d.open()
     d.open()
 
-    s = Scheduler()
+    s = Scheduler(10)
     p = Producer("Hello")
     c = Consumer()
 
