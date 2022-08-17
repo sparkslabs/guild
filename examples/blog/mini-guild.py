@@ -6,8 +6,8 @@ Has actor_methods and late bound methods.
 
 """
 def mkActorMethod(self, func_name):
-    def actor_method(*args):
-        self.inputqueue.append((func_name, *args))
+    def actor_method(*args, **argd):
+        self.inputqueue.append((func_name, args, argd))
     return actor_method
 
 class Actor:
@@ -58,10 +58,10 @@ class Actor:
 
     def handle_inqueue(self):
         call = self.inputqueue.pop(0)
-        func_name, args = call[0], call[1:]
+        func_name, argv, argd = call[0], call[1], call[2]
         #print(func_name, args)
         func = getattr(self._behaviour, func_name)
-        func(*args)
+        func(*argv, **argd)
 
     def main(self):
         while self.active:
