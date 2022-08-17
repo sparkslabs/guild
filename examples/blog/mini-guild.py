@@ -5,18 +5,44 @@ A simplified version of guild without the full set of capabilities.
 Has actor_methods and late bound methods.
 
 """
+def mkActorMethod(self, func_name):
+    def actor_method(*args):
+        self.inputqueue.append((func_name, *args))
+    return actor_method
 
 class Actor:
     Behaviour = None # Override with your behaviour, doesn't have to be a special class
+    Behaviours = []
+    default_actor_methods = ["input"]
+    actor_methods = []
+
     def __init__(self, *args, **argd):
         super(Actor, self).__init__()
         if self.Behaviour is None:
-            raise Exception("You do not call Actor directly. Inherit and override Behaviour")
+            if self.Behaviours != []:
+                self.Behaviour = self.Behaviours[0]
+            else:
+                raise Exception("You do not call Actor directly. Inherit and override Behaviour")
+        self.args = args
+        self.argd = argd
         self.greenthread = None
         self.inputqueue = []
-        self._behaviour = (self.Behaviour)(*args, **argd)
+        self.become(self.Behaviour)
         self.active = False
         self.sleeping = False
+
+    def initialiseBehaviour(self, *args, **argd):
+        self._behaviour = (self.Behaviour)(*args, **argd)
+        for name in self.default_actor_methods + self.actor_methods:
+            if name in self.Behaviour.__dict__:
+                setattr(self, name, mkActorMethod(self, name))
+        self._behaviour.become = self.become
+
+    def become(self, behaviour_class):
+        self.Behaviour = behaviour_class
+        self.initialiseBehaviour(*self.args, **self.argd)
+        if not hasattr(self._behaviour, "tick"):
+            self._behaviour.tick = lambda *args: None
 
     def start(self):
         self.greenthread = self.main()
@@ -38,8 +64,6 @@ class Actor:
         func(*args)
 
     def main(self):
-        if not hasattr(self._behaviour, "tick"):
-            self._behaviour.tick = lambda *args: None
         while self.active:
             yield 1
             while (self.inputqueue  and self.active):
@@ -55,9 +79,6 @@ class Actor:
 
     def issleeping(self):
         return self.sleeping
-
-    def input(self, data):
-        self.inputqueue.append(("input", data))
 
     def stop(self):
         if hasattr(self._behaviour, "stop"):
@@ -98,13 +119,53 @@ class Consumer(Actor):
             print("Consumed:", data, self.count)
             self.sleeping = True
 
+        def munch(self, data):
+            self.count += 1
+            print("Munched:", data, self.count)
+            self.sleeping = True
+
+    actor_methods = ["munch"]
+
+
+class Door(Actor):
+    class OpenBehaviour:
+        def open(self):
+            print("OPEN:open.  The Door is already open!")
+        def close(self):
+            print("OPEN:close. The door is now closed!")
+            self.become(Door.ClosedBehaviour)
+
+    class ClosedBehaviour:
+        def open(self):
+            print("CLOSE:open.  The door is now open!")
+            self.become(Door.OpenBehaviour)
+        def close(self):
+            print("CLOSE:close. The Door is already closed!")
+
+    actor_methods = ["open","close"]
+    Behaviours = ClosedBehaviour, OpenBehaviour
+
 
 if __name__ == "__main__":
 
     p = Producer("Hello").start()
     c = Consumer().start()
+    d = Door().start()
 
-    p.link("output", c.input)
+    d.open()
+    d.open()
+    d.close()
+    d.close()
+    d.open()
+    d.open()
+    d.tick()
+    d.tick()
+    d.tick()
+    d.tick()
+    d.tick()
+    d.tick()
+
+    p.link("output", c.munch)
 
     x = 0
 
