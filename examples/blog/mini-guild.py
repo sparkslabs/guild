@@ -27,9 +27,10 @@ class Actor:
         self.argd = argd
         self.greenthread = None
         self.inputqueue = []
-        self.become(self.Behaviour)
         self.active = False
         self.sleeping = False
+        self.passive = False
+        self.become(self.Behaviour)
 
     def initialiseBehaviour(self, *args, **argd):
         self._behaviour = (self.Behaviour)(*args, **argd)
@@ -38,7 +39,10 @@ class Actor:
                 setattr(self, name, mkActorMethod(self, name))
         self._behaviour.become = self.become
         if not hasattr(self._behaviour, "tick"):
-            self._behaviour.tick = lambda *args: None
+            self.passive = True
+            self.sleeping = True
+
+        self._behaviour._wrapper = self
 
     def become(self, behaviour_class):
         self.Behaviour = behaviour_class
@@ -68,8 +72,9 @@ class Actor:
             yield 1
             while (self.inputqueue  and self.active):
                 self.handle_inqueue()
-            if self.active and not self.sleeping:
-                self._behaviour.tick()
+            if not self.passive:
+                if self.active and not self.sleeping:
+                    self._behaviour.tick()
 
     def link(self, methodname, target):
         setattr(self._behaviour, methodname, target)
