@@ -184,9 +184,66 @@ class Door(Actor):
     actor_methods = ["open","close"]
     Behaviours = ClosedBehaviour, OpenBehaviour
 
+import time
+class RingPinger(Actor):
+    class Behaviour:
+        def __init__(self, next_actor=None):
+            self.next_actor = next_actor
+            self.start = time.time()
+
+        def ping(self, message):
+            if message[0] == self._wrapper:
+                now = time.time()
+                #print("LOOPTIME", now-self.start)
+                self.start = now
+
+                if message[1] == 1:
+                    self._wrapper.stop()
+                message[1] -= 1
+                self.next_actor.ping(message)
+            else:
+                self._wrapper.sleeping = True
+                if message[1] == 1:
+                    self._wrapper.stop()
+                self.next_actor.ping(message)
+
+        def set_next(self, next_actor):
+            self.next_actor = next_actor
+
+    actor_methods = ["ping","set_next"]
 
 if __name__ == "__main__":
 
+    import sys
+
+    N = int(sys.argv[1])
+    M = int(sys.argv[2])
+    print("n, m", repr(N), repr(M))
+
+    first = RingPinger()
+    last = first
+    pingers = [first]
+    for _ in range(N):
+        last = RingPinger(last)
+        pingers.append(last)
+
+    import time
+    s = Scheduler()
+
+    s.schedule(*pingers)
+
+    first.set_next(last)
+    last.ping( [first, M] )
+
+    start = time.time()
+    print("START", start, time.asctime())
+    s.run()
+    end = time.time()
+    print("END  ", end, time.asctime())
+    print("DURATION:", end-start)
+
+if 0:
+    s = Scheduler()
     d = Door()
 
     d.open()
@@ -196,13 +253,8 @@ if __name__ == "__main__":
     d.open()
     d.open()
 
-    s = Scheduler(10)
     p = Producer("Hello")
     c = Consumer()
-
-    s.schedule(p, c, d)
-
     p.link("output", c.munch)
-    s.run()
+    s.schedule(p, c, d )
 
-    print(c.inputqueue)
