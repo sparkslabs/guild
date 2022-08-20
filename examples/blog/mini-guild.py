@@ -241,6 +241,7 @@ if __name__ == "__main__":
     end = time.time()
     print("END  ", end, time.asctime())
     print("DURATION:", end-start)
+    print("Rate:", int((N*M)/(end-start)+0.5), "messages/sec")
 
 if 0:
     s = Scheduler()
