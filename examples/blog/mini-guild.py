@@ -8,6 +8,8 @@ Has actor_methods and late bound methods.
 def mkActorMethod(self, func_name):
     def actor_method(*args, **argd):
         self.inputqueue.append((func_name, args, argd))
+        self.sleeping = False
+        self.scheduler.wake(self)
     return actor_method
 
 class Actor:
@@ -48,9 +50,10 @@ class Actor:
         self.Behaviour = behaviour_class
         self.initialiseBehaviour(*self.args, **self.argd)
 
-    def start(self):
+    def start(self, scheduler):
         self.greenthread = self.main()
         self.active = True
+        self.scheduler = scheduler
         return self
 
     def tick(self):
@@ -99,23 +102,26 @@ class Scheduler:
 
     def schedule(self, *actors):
         for actor in actors:
-            actor.start()
-            self.actors.append(actor)
+            actor.start(self)
+            if not actor.sleeping:
+                self.actors.append(actor)
+
+    def wake(self, actor):
+        self.actors.append(actor)
 
     def run(self):
-        if self.maxrun:
-            ticks = 0
-
+        ticks = 0
         while len(self.actors) > 0:
             nactors = []
             if self.maxrun:
                 ticks +=1
             for actor in self.actors:
                 actor.tick()
-                if actor.isactive():
-                    nactors.append(actor)
+                if actor.active:
+                    if not actor.sleeping:
+                        nactors.append(actor)
             if self.maxrun and (ticks >= self.maxrun):
-                actor.stop()
+                [x.stop() for x in self.actors]
 
             self.actors = nactors
 
