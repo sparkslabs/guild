@@ -90,10 +90,40 @@ class TCPServer(Actor):
                 ph.background()
 
 
+class TCPClient:
+    def __init__(self, host, port, message):
+        self.host = host
+        self.port = port
+        self.message = message
+    def main(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (self.host, self.port)
+        print('TCPC: connecting to %s port %s' % server_address, file=sys.stderr)
+        sock.connect(server_address)
+
+        try:
+            print('TCPC: sending "%s"' % self.message, file=sys.stderr)
+            sock.sendall(self.message)
+
+            received = 0
+            expected = len(self.message)
+
+            while received < expected:
+                data = sock.recv(16)
+                received += len(data)
+                print('TCPC: received "%s"' % data, file=sys.stderr)
+
+        finally:
+            print('closing socket', file=sys.stderr)
+            sock.close()
+
+
 tcps = TCPServer()
 tcps.background()
 time.sleep(1)
 
+tcpc = TCPClient("127.0.0.1", 12345, message=b"This is the message to be sent, it'll be echoed back")
+tcpc.main()
 
 while True:
     time.sleep(1)
