@@ -20,10 +20,10 @@ import threading
 # NOTE: Python's deque is threadsafe, and quicker than a list..
 from collections import deque
 
-# This might be the wrong approach
-# Needs pondering
+# This is likely the wrong approach to dealing with a threading scheduler. Feels/seems wrong.
 
 SCHEDULER_IN_THREAD = True
+#SCHEDULER_IN_THREAD = False
 
 def mkActorMethod(self, func_name):
     def actor_method(*args, **argd):
