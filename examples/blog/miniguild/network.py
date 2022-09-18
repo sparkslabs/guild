@@ -10,27 +10,48 @@ import sys
 
 from miniguild import Scheduler, Actor
 
-class ProtocolHandler:
+class Protocol:
+    def __init__(self, output):
+        self.output = output
+
+    def input(self, data):
+        print('received "%s"' % data, file=sys.stderr)
+        if data:
+            print('sending data back to the client', file=sys.stderr)
+            self.output(data)
+        else:
+            print('no more data from', "self.client_address", file=sys.stderr)
+            self.output(None)
+
+
+class ConnectionHandler(Actor):
+    class Behaviour:
         def __init__(self, connection, client_address):
             self.connection = connection
             self.client_address = client_address
+            self.running = True
+
         def main(self):
+            proto = Protocol(self.output)
             try:
                 print('connection from', self.client_address, file=sys.stderr)
                 # Receive the data in small chunks and retransmit it
-                while True:
+                while self.running:
+                    yield 1
                     data = self.connection.recv(16)
-                    print('received "%s"' % data, file=sys.stderr)
-                    if data:
-                        print('sending data back to the client', file=sys.stderr)
-                        self.connection.sendall(data)
-                    else:
-                        print('no more data from', self.client_address, file=sys.stderr)
-                        break
+                    proto.input(data)
                     
             finally:
                 # Clean up the connection
                 self.connection.close()
+            print('Connection Handler Shutdown', self.client_address, file=sys.stderr)
+
+        def output(self, data):
+            if data is None:
+                self.running = False
+                return
+            self.connection.sendall(data)
+
     
 
 class TCPServer:
@@ -47,8 +68,8 @@ class TCPServer:
             # Wait for a connection
             print('waiting for a connection', file=sys.stderr)
             connection, client_address = sock.accept()
-            ph = ProtocolHandler(connection, client_address)
-            ph.main()
+            ch = ConnectionHandler(connection, client_address)
+            ch.background()
 
 
 
