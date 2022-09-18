@@ -53,6 +53,7 @@ class Actor:
         self.reactive = False
         self.become(self.Behaviour)
         self.wake_callback = lambda x: None
+        self._thread = None
 
     def initialiseBehaviour(self, *args, **argd):
         self._behaviour = (self.Behaviour)(*args, **argd)
@@ -128,35 +129,31 @@ class Actor:
 
     def run(self, run_in_thread=False):
         if self.blocking or run_in_thread:
-            thread = threading.Thread(target=self._run)
-            thread.start()
-            thread.join()
+            self.background()
+            self.join()
         else:
             self._run()
+
+    def background(self):
+        "Run this actor in the background"
+        self._thread = threading.Thread(target=self._run)
+        self._thread.start()
+        return self
+
+    def join(self):
+        "Wait for this actor's thread to finish"
+        if self._thread is not None:
+            self._thread.join()
+        else:
+            print("WARNING: join called on a non-threaded actor")
 
 
 class ThreadActor(Actor):
     blocking = True
-    def __init__(self, *argv, **argd):
-        super(ThreadedActor,self).__init__(*argv, **argd)
-        self._thread = None
-
-    def _run(self):
-        for i in self.main():
-            pass
-    def background(self):
-        "Run this actor in the background"
-        self.start()
-        self._thread = threading.Thread(target=self._run)
-        thread.start()
-        return self
-    def join(self):
-        "Wait for this actor's thread to finish"
-        self.thread.join()
 
 
 class SchedulerActor(Actor):
-    blocking = True
+    blocking = False
     class Behaviour:
         def __init__(self, maxrun=None, initialise=lambda : None):
             self.actors = deque()
