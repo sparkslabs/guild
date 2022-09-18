@@ -7,6 +7,7 @@ Simple network example
 
 import socket
 import sys
+import select
 
 from miniguild import Scheduler, Actor
 
@@ -24,7 +25,6 @@ class Protocol(Actor):
                 self._wrapper.stop()
     actor_methods = ["input"]
 
-
 class ConnectionHandler(Actor):
     class Behaviour:
         def __init__(self, connection, client_address):
@@ -33,17 +33,19 @@ class ConnectionHandler(Actor):
             self.running = True
 
         def main(self):
+            conn = self.connection
             proto = Protocol()
             try:
                 print('CH: connection from', self.client_address, file=sys.stderr)
                 # Receive the data in small chunks and retransmit it
                 while self.running:
                     yield 1
-                    print("CH: WAITING FOR DATA", self.connection, self.client_address)
-                    data = self.connection.recv(16)
-                    self.output(data)   # Send to protocol handler
-                    yield 1
-                    
+                    r,w,e = select.select([self.connection],[],[], 0.01)  # Is there data to read?
+                    if r != []:
+                        print("CH: WAITING FOR DATA", self.connection, self.client_address)
+                        data = self.connection.recv(16)
+                        self.output(data)   # Send to protocol handler
+
             finally:
                 # Clean up the connection
                 self.connection.close()
