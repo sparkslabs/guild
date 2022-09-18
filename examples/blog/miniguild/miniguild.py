@@ -20,11 +20,6 @@ import threading
 # NOTE: Python's deque is threadsafe, and quicker than a list..
 from collections import deque
 
-# This is likely the wrong approach to dealing with a threading scheduler. Feels/seems wrong.
-
-SCHEDULER_IN_THREAD = True
-#SCHEDULER_IN_THREAD = False
-
 def mkActorMethod(self, func_name):
     def actor_method(*args, **argd):
         self.inputqueue.append((func_name, args, argd))
@@ -33,6 +28,7 @@ def mkActorMethod(self, func_name):
     return actor_method
 
 class Actor:
+    blocking = False
     Behaviour = None # Override with your behaviour
                      # doesn't have to be a special class
     Behaviours = []
@@ -125,34 +121,42 @@ class Actor:
         self.active = False
         self.sleeping = False
 
-    def run(self):
+    def _run(self):
         self.start()
         for i in self.main():
             pass
 
+    def run(self, run_in_thread=False):
+        if self.blocking or run_in_thread:
+            thread = threading.Thread(target=self._run)
+            thread.start()
+            thread.join()
+        else:
+            self._run()
 
-class ThreadActor(threading.Thread, Actor): # Experiment
-    def __init__(self, *args, **argd):
-        # Can't use super() --> args to __init__ differ in base classes
-        Actor.__init__(self, *args, **argd)
-        threading.Thread.__init__(self)
 
-    def actor_start(self, *args):
-        Actor.start(self, *args)
+class ThreadActor(Actor):
+    blocking = True
+    def __init__(self, *argv, **argd):
+        super(ThreadedActor,self).__init__(*argv, **argd)
+        self._thread = None
 
-    def run(self):
-        self.actor_start()
+    def _run(self):
         for i in self.main():
             pass
+    def background(self):
+        "Run this actor in the background"
+        self.start()
+        self._thread = threading.Thread(target=self._run)
+        thread.start()
+        return self
+    def join(self):
+        "Wait for this actor's thread to finish"
+        self.thread.join()
 
 
-if SCHEDULER_IN_THREAD:
-    scheduler_class = ThreadActor
-else:
-    scheduler_class = Actor
-
-
-class SchedulerActor(scheduler_class):
+class SchedulerActor(Actor):
+    blocking = True
     class Behaviour:
         def __init__(self, maxrun=None, initialise=lambda : None):
             self.actors = deque()
@@ -202,12 +206,6 @@ class SchedulerActor(scheduler_class):
     actor_methods = ["wake","schedule"]
 
 
-def run_scheduler(s):
-    if SCHEDULER_IN_THREAD:
-        s.start()
-        s.join()
-    else:
-        s.run()
 
 
 if __name__ == "__main__":

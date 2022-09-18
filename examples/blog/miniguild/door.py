@@ -5,7 +5,7 @@ Example of using multiple behaviours in a single actor
 """
 
 
-from miniguild import SchedulerActor, Actor, run_scheduler
+from miniguild import SchedulerActor, Actor
 
 
 
@@ -43,4 +43,6 @@ if __name__ == "__main__":
     d.open()
     d.open()
 
-    run_scheduler(s)
+    s.run(run_in_thread=False)
+#    s.run(run_in_thread=True)
+#    run_scheduler(s)
