@@ -5,7 +5,7 @@ Simple producer/consumer example
 
 """
 
-from miniguild import SchedulerActor, Actor
+from miniguild import Scheduler, Actor
 
 class Producer(Actor):
     class Behaviour:
@@ -36,7 +36,7 @@ class Consumer(Actor):
 
 
 if __name__ == "__main__":
-    s = SchedulerActor()
+    s = Scheduler()
     p = Producer("Hello")
     c = Consumer()
     p.link("output", c.munch)

@@ -6,7 +6,7 @@ Mini Guild Benchmark
 
 import miniguild
 
-from miniguild import SchedulerActor, Actor
+from miniguild import Scheduler, Actor
 
 class RingPinger(Actor):
     class Behaviour:
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     def init():
         first.startping(first, last, M, N)
 
-    s = SchedulerActor(initialise = init)
+    s = Scheduler(initialise = init)
     s.schedule(*pingers)
 
 

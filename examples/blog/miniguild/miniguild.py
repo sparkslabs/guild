@@ -152,8 +152,8 @@ class ThreadActor(Actor):
     blocking = True
 
 
-class SchedulerActor(Actor):
-    blocking = False
+class Scheduler(Actor):
+    blocking = True
     class Behaviour:
         def __init__(self, maxrun=None, initialise=lambda : None):
             self.actors = deque()
