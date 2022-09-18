@@ -90,12 +90,14 @@ class TCPServer(Actor):
                 ph.background()
 
 
+
+
 class TCPClient(Actor):
     class Behaviour:
-        def __init__(self, host, port, message):
+        def __init__(self, host, port, ph):
             self.host = host
             self.port = port
-            self.message = message
+            self.ph = ph
 
         def main(self):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -103,29 +105,45 @@ class TCPClient(Actor):
             print('TCPC: connecting to %s port %s' % server_address, file=sys.stderr)
             sock.connect(server_address)
 
-            try:
-                print('TCPC: sending "%s"' % self.message, file=sys.stderr)
-                sock.sendall(self.message)
+            ch = ConnectionHandler(sock, server_address)
+            self.ph.link("output", ch.input)
+            ch.link("output", self.ph.input)
 
-                received = 0
-                expected = len(self.message)
+            ch.background()
+            self.ph.background()
 
-                while received < expected:
-                    data = sock.recv(16)
-                    received += len(data)
-                    print('TCPC: received "%s"' % data, file=sys.stderr)
-
-            finally:
-                print('closing socket', file=sys.stderr)
-                sock.close()
             yield 1 
+
+
+class ProducerConsumer(Actor):
+    blocking = True
+    class Behaviour:
+        def __init__(self, message):
+            self.message = message
+            self.count = 0
+
+        def main(self):
+            while True:
+                yield 1
+                self.output(self.message)
+                time.sleep(1)  # So we can see what's happening...
+
+        def input(self, data):
+            self.count += 1
+            print("********************************************************************")
+            print("Munched:", data, self.count)
+            print("********************************************************************")
+            self.sleeping = True
+
+    actor_methods = ["input"]
 
 
 tcps = TCPServer()
 tcps.background()
 time.sleep(1)
 
-tcpc = TCPClient("127.0.0.1", 12345, message=b"This is the message to be sent, it will be echoed back")
+client_ph = ProducerConsumer(message=b"This is the message to be sent, it will be echoed back")
+tcpc = TCPClient("127.0.0.1", 12345, client_ph)
 tcpc.background()
 
 while True:
