@@ -34,7 +34,6 @@ class ConnectionHandler(Actor):
 
         def main(self):
             conn = self.connection
-            proto = Protocol()
             try:
                 print('CH: connection from', self.client_address, file=sys.stderr)
                 # Receive the data in small chunks and retransmit it
@@ -85,7 +84,6 @@ class TCPServer:
 
             ch.background()
             ph.background()
-
 
 tcps = TCPServer()
 tcps.main()
