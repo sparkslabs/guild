@@ -35,6 +35,24 @@ class Consumer(Actor):
     actor_methods = ["munch"]
 
 
+# Single class that has both behaviours essentially
+class ProducerConsumer(Actor):
+    class Behaviour:
+        def __init__(self, message):
+            self.message = message
+
+        def main(self):
+            while True:
+                yield 1
+                self.output(self.message)
+
+        def munch(self, data):
+            self.count += 1
+            print("Munched:", data, self.count)
+            self.sleeping = True
+
+    actor_methods = ["munch"]
+
 if __name__ == "__main__":
     s = Scheduler()
     p = Producer("Hello")
