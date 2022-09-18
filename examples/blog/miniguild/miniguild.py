@@ -202,6 +202,14 @@ class SchedulerActor(scheduler_class):
     actor_methods = ["wake","schedule"]
 
 
+
+def run_scheduler(s):
+    if SCHEDULER_IN_THREAD:
+        s.start()
+        s.join()
+    else:
+        s.run()
+
 class Producer(Actor):
     class Behaviour:
         def __init__(self, message):
