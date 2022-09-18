@@ -28,28 +28,28 @@ class EchoProtocol(Actor):
 
 class ConnectionHandler(Actor):
     class Behaviour:
-        def __init__(self, connection, client_address):
+        def __init__(self, connection, remote_address):
             self.connection = connection
-            self.client_address = client_address
+            self.remote_address = remote_address
             self.running = True
 
         def main(self):
             conn = self.connection
             try:
-                print('CH: connection from', self.client_address, file=sys.stderr)
+                print('CH: connection from', self.remote_address, file=sys.stderr)
                 # Receive the data in small chunks and retransmit it
                 while self.running:
                     yield 1
                     r,w,e = select.select([self.connection],[],[], 0.01)  # Is there data to read?
                     if r != []:
-                        print("CH: WAITING FOR DATA", self.connection, self.client_address)
+                        print("CH: RETRIEVING DATA", self.connection, self.remote_address)
                         data = self.connection.recv(16)
                         self.output(data)   # Send to protocol handler
 
             finally:
                 # Clean up the connection
                 self.connection.close()
-            print('CH: Connection Handler Shutdown', self.client_address, file=sys.stderr)
+            print('CH: Connection Handler Shutdown', self.remote_address, file=sys.stderr)
 
 
         def input(self, data):
