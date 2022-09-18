@@ -5,13 +5,14 @@ Simple network example
 
 """
 
+import time
 import socket
 import sys
 import select
 
 from miniguild import Scheduler, Actor
 
-class Protocol(Actor):
+class EchoProtocol(Actor):
     class Behaviour:
         def input(self, data):
             print("PH: OUTPUT FUNC", self.output)
@@ -53,7 +54,7 @@ class ConnectionHandler(Actor):
 
         def input(self, data):
             # Input from the protocol handler
-            print("DATA FROM PROTOCOL", data)
+            print("CH: Data from protocol", data)
             if data is None:
                 self.running = False
                 return
@@ -62,28 +63,37 @@ class ConnectionHandler(Actor):
     actor_methods = ["input"]
 
 
-class TCPServer:
-    port = 12345
-    host = "0.0.0.0"
+class TCPServer(Actor):
+    class Behaviour:
+        port = 12345
+        host = "0.0.0.0"
+        Protocol = EchoProtocol
 
-    def main(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Allow fast reuse of socket
-        sock.bind((self.host, self.port))
-        sock.listen(1)
+        def main(self):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Allow fast reuse of socket
+            sock.bind((self.host, self.port))
+            sock.listen(1)
 
-        while True:
-            # Wait for a connection
-            print('waiting for a connection', file=sys.stderr)
-            connection, client_address = sock.accept()
-            ch = ConnectionHandler(connection, client_address)
-            ph = Protocol()
-            # Bidirectional links between protocol and client handlers:
-            ph.link("output", ch.input)
-            ch.link("output", ph.input)
+            while True:
+                yield 1
+                # Wait for a connection
+                print('TCPS: waiting for a connection', file=sys.stderr)
+                connection, client_address = sock.accept()
+                ch = ConnectionHandler(connection, client_address)
+                ph = self.Protocol()
+                # Bidirectional links between protocol and client handlers:
+                ph.link("output", ch.input)
+                ch.link("output", ph.input)
 
-            ch.background()
-            ph.background()
+                ch.background()
+                ph.background()
+
 
 tcps = TCPServer()
-tcps.main()
+tcps.background()
+time.sleep(1)
+
+
+while True:
+    time.sleep(1)
