@@ -137,14 +137,14 @@ class ProducerConsumer(Actor):
 
     actor_methods = ["input"]
 
-
-tcps = TCPServer()
-tcps.background()
-time.sleep(1)
-
-client_ph = ProducerConsumer(message=b"This is the message to be sent, it will be echoed back")
-tcpc = TCPClient("127.0.0.1", 12345, client_ph)
-tcpc.background()
-
-while True:
+if __nme__ == "__main__":
+    tcps = TCPServer()
+    tcps.background()
     time.sleep(1)
+
+    client_ph = ProducerConsumer(message=b"This is the message to be sent, it will be echoed back")
+    tcpc = TCPClient("127.0.0.1", 12345, client_ph)
+    tcpc.background()
+
+    while True:
+        time.sleep(1)
