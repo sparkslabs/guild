@@ -3,7 +3,7 @@
 import pygame
 import time
 
-from miniguild import Scheduler, Actor
+from miniguild import Actor
 #---------------------------------------------------------------------------
 import subprocess
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     MYFONT_FILE = "/mnt/classified/michael/.fonts/MichaelNewHW.ttf"
     HIPPO_SONG = "resources/hippo.mp3"
 
-    from miniguild import Scheduler, Actor
+    from miniguild import Scheduler
     pygame.init()
     pygame.mixer.init() 
 
