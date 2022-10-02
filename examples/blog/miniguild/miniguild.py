@@ -12,12 +12,12 @@ Has some extra (novel) features:
 Has actor_methods and late bound methods.
 
 """
-
+#---------------------------------------------------------------------------
 import sys
 import time
 import threading
 
-# NOTE: Python's deque is threadsafe, and quicker than a list..
+# NOTE: deque (pop/append) is threadsafe, and quicker than a list..
 from collections import deque
 
 def mkActorMethod(self, func_name):
@@ -156,6 +156,7 @@ class Scheduler(Actor):
     blocking = True
     class Behaviour:
         def __init__(self, maxrun=None, initialise=lambda : None):
+
             self.actors = deque()
             self.maxrun = maxrun
             self.initialise = initialise
@@ -174,10 +175,10 @@ class Scheduler(Actor):
         def wake(self, actor):
             self.actors.append(actor)
 
-        def main(self):                           # NOTE: Name
+        def main(self):
             ticks = 0
             while len(self.actors) > 0:
-                yield 1                           # NOTE: added 'yield'
+                yield 1
                 nactors = deque()
                 if self.maxrun:
                     ticks +=1
