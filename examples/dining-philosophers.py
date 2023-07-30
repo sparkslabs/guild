@@ -52,14 +52,18 @@ class Philosopher(Actor):
         table = self.table.checkout()
         try:
             with table.changeset(self.left, self.right) as c:
-                c[self.left].set(PICKEDUP)
-                c[self.right].set(PICKEDUP)
-                time.sleep(self.min_munch_time)
-            print(id(self), ":", "Picked up", self.left, self.right)
-            return True
+                if (c[self.left].value == ONTABLE) and (c[self.right].value == ONTABLE):
+                    c[self.left].set(PICKEDUP)
+                    c[self.right].set(PICKEDUP)
+                else:
+                    print("Could only get one fork - trying later")
+                    return False
         except guild.stm.BusyRetry:
             print(id(self), ":", "FAILED TO PICK UP")
             return False
+        time.sleep(self.min_munch_time)
+        print(id(self), ":", "Picked up", self.left, self.right)
+        return True
 
     def eat(self):
         print(id(self), ":", "Eating!")
