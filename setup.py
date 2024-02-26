@@ -27,7 +27,7 @@ packages = find_packages(".")
 package_names = packages.keys()
 
 setup(name = "guild",
-      version = "1.3.6",
+      version = "1.3.7",
       description = "An Actor library supporting concurrency using pipelinable pythonic actors",
       author='Michael Sparks (sparkslabs)',
       author_email="sparks.m@gmail.com",
