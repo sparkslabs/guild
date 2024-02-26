@@ -6,7 +6,11 @@ reason.
 
 ## [NEXT] - YYYY-MM-DD
 
-## [1.3.6] - 
+## 1.3.7 - 2024-02-26
+
+Minor fix to actors that only have a main generator
+
+## [1.3.6] - (bumped, 1.3.7 was next release)
 
 Bumped minor version number to 3 since we have dropped python 2 support. 
 The reason why the major version number hasn't changed is because the API
