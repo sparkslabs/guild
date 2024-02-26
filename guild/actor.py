@@ -353,6 +353,7 @@ class Actor(ActorMixin, _Thread):
             # NB next line looks at the code object, and checks a flag
             if inspect.isgeneratorfunction(gen):
                 g = gen()
+                self.killflag = False  # Or else an empty process_method can cause shutdown
             else:
                 function_name = gen.__self__.__class__.__name__ +"."+gen.__name__
                 source_ref = "(%s, line: %d)" % (gen.__func__.__code__.co_filename, gen.__func__.__code__.co_firstlineno)
