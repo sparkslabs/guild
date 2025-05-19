@@ -50,8 +50,10 @@ class Sprite(Actor):
     def update_pos(self, x, y):
         repo = self.sprite_state.checkout()
         with repo.changeset("x","y") as c: # This can fail
-            c["x"].set(x)
-            c["y"].set(y)
+             c.x = x
+             c.y = y
+#            c["x"].set(x)
+#            c["y"].set(y)
 
         self.pos = self.get_pos(force=True)
 

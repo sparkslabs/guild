@@ -16,7 +16,7 @@ class Kitten(Actor):
         print("MAIN")
         while True:
             self.count += 1
-            print(self, "I don't go woof", self.count)
+            print(self, id(self), "I don't go woof", self.count)
             time.sleep(0.2)
             if self.count >= 10:
                 self.stop()
