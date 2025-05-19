@@ -45,7 +45,8 @@ ppadeb:
 	@echo "Clean up dist before uploading to pypi, or it'll contain too much junk"
 
 pypi:
-	$(PYTHON) setup.py sdist upload
+	$(PYTHON) setup.py sdist
+	twine upload --repository testpypi dist/*
 
 use:
 	cd dist && cd deb_dist/ && sudo dpkg -i python3-$(PROJECT)_*
@@ -55,6 +56,7 @@ clean:
 	$(PYTHON) setup.py clean
 	rm -rf dist
 	rm -rf build/ MANIFEST
+	rm -rf guild.egg-info/
 	find . -name '*.pyc' -delete
 	rm -f *~
 
